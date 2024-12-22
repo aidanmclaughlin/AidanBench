@@ -12,95 +12,110 @@ Some models feel competent despite under-scoring on benchmarks like MMLU, GPQA, 
 
 # Methodology
 
-We give LLMs a set of open-ended questions like the following:
+We give LLMs a set of open-ended questions spanning various domains:
 
 ```python
 "Provide an explanation for Japan's Lost Decades.",
 "How might you use a brick and a blanket?",
 "What architectural features might you include in a tasteful house?",
-"Provide coordinates for a point inside the unit circle (x^2 + y^2 < 1).",
 "Propose a solution to Los Angeles traffic.",
 "What activities might I include at a party for firefighters?",
 "How could we redesign schools to better prepare students for the 22nd century?",
+# ... and many more
 ```
 
-And ask the model to answer each question while **avoiding previous answers** provided in-context.
+For each question, we ask the model to generate novel answers while avoiding previous responses. The benchmark continues generating answers until either:
 
-For each question, we generate answers until:
+1. The answer becomes incoherent (coherence score ≤ 15/100)
+2. The answer is too similar to previous responses (embedding similarity ≥ 0.85)
 
-1. An answer is clearly incoherent (as judged by another LLM)
-2. An answer is quite similar to one of its previous answers (as judged by an embedding model)
+## Scoring System
 
-We sum models' novelty scores across questions. The novelty score is the sum of the maximum dissimilarity across many questions:
+For each question q and model M, we compute the score S_M(q) as the maximum number of valid responses that satisfy both coherence and novelty thresholds:
 
-$$
-\text{max}\text{-}\text{dissimilarity} = 1 - \max_{e_i \in E_\text{prev}} \frac{e_\text{new} \cdot e_i}{\|e_\text{new}\| \|e_i\|}
-$$
+1. **Coherence Score (C)**: Each response is evaluated by a judge model (o1-mini) on a scale of 0-100. Responses must maintain C > 15 to be considered valid.
 
-where:
+2. **Novelty Score (N)**: For each new response r, we compute:
+   ```
+   N = 1 - max(cosine_similarity(e_new, e_prev))
+   ```
+   where e_new is the embedding of the new response and e_prev are embeddings of all previous responses. Responses must maintain N > 0.15 to be considered valid.
 
-- $e_\text{new}$: embedding vector of the new answer
-- $E_\text{prev}$: set of embedding vectors for previous answers, $\{e_1, e_2, ..., e_n\}$
-- $e_i$: an individual embedding vector from $E_\text{prev}$
+The final score for a model is the sum of valid responses across all questions before either threshold is breached. This straightforward scoring mechanism offers:
 
-# Findings
+- Clear interpretability ("Model X generated Y unique answers")
+- Robustness through simple failure detection
+- Reliability through objective thresholds
 
-Here are the summed novelty scores across models:
+# Results
 
-![Novelty scores across models](aidan_bench_results.png)
+Here are the latest benchmark results across various models:
 
-We average scores across 5 runs at temperature=0.7 (and default temperature for `claude-3.5-sonnet` and `o1-mini`).
+![Benchmark results across models](results.png)
 
-## Setup
+We test models at temperature=0.7.
 
-### Prerequisites
+# Setup
 
-Ensure you have Python installed on your system. This project requires the following libraries:
+## Prerequisites
 
-- numpy
-- openai
-- colorama
-- retry
+- Python 3.x
+- OpenAI API key
+- OpenRouter API key
 
-### Installation
+## Installation
 
 1. Clone the repository:
-   ```
+   ```bash
    git clone https://github.com/aidanmclaughlin/Aidan-Bench.git
    cd Aidan-Bench
    ```
 
-2. Install the required libraries:
-   ```
+2. Install required packages:
+   ```bash
    pip install numpy openai colorama retry
    ```
 
-3. Set up your API keys:
-   - Create an environment variable named `OPEN_ROUTER_KEY` with your OpenRouter API key.
-   - Create an environment variable named `OPENAI_API_KEY` with your OpenAI API key.
+3. Set up environment variables:
+   ```bash
+   export OPENAI_API_KEY="your-openai-key"
+   export OPEN_ROUTER_KEY="your-openrouter-key"
+   ```
 
-### Running the Project
+## Running the Benchmark
 
-To run the benchmark:
-
+Run the benchmark with:
+```bash
+python main.py
 ```
-python main.py <model_name> [--single-threaded]
+
+The script will guide you through several choices:
+
+1. Select model(s) to benchmark
+   - Choose from a list of supported models
+   - Option to test multiple models in sequence
+
+2. Configure test parameters
+   - Threading mode (multi-threaded or single-threaded)
+   - Temperature setting (default: 0.7)
+   - Number of questions to test
+   - Use of LLM judge for similarity scoring
+
+3. Set thresholds (optional)
+   - Coherence score threshold
+   - Embedding similarity threshold
+   - LLM similarity threshold (if using LLM judge)
+
+Results will be saved to `results.json` and can be visualized using the included visualization tool.
+
+## Visualization
+
+After running the benchmark, you can visualize results using the included visualization tool:
+
+```bash
+cd visualize_results
+python -m http.server 8000
 ```
 
-Arguments:
-- `<model_name>`: (Required) Name of the model to benchmark
-- `--single-threaded`: (Optional) Run in single-threaded mode
+Then open `http://localhost:8000/visualization` in your browser to explore the results interactively.
 
-Examples:
-
-1. To run the benchmark for GPT-4 Turbo in multithreaded mode (default):
-   ```
-   python main.py openai/gpt-4-turbo
-   ```
-
-2. To run the benchmark for Claude 3 Sonnet in single-threaded mode:
-   ```
-   python main.py anthropic/claude-3-sonnet --single-threaded
-   ```
-
-The script will execute the benchmark using the specified model and threading option. By default, the benchmark runs in multithreaded mode unless the `--single-threaded` flag is provided.
