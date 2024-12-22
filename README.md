@@ -63,11 +63,10 @@ $$
 S_{\mathcal{M}} = \sum_{q \in Q} S_{\mathcal{M}}(q)
 $$
 
-This straightforward scoring mechanism offers:
-
-- Clear interpretability ("Model X generated Y unique answers")
-- Robustness through simple failure detection
-- Reliability through objective thresholds
+This scoring mechanism is:
+- Clear and interpretable
+- Robust through failure detection
+- Reliable with objective thresholds
 
 # Results
 
@@ -123,10 +122,14 @@ The script will guide you through several choices:
    - Number of questions to test
    - Use of LLM judge for similarity scoring
 
-3. Set thresholds (optional)
-   - Coherence score threshold ($\tau_c$)
-   - Embedding similarity threshold ($\tau_n$)
-   - LLM similarity threshold (if using LLM judge)
+3. Configure thresholds
+   The benchmark uses three key thresholds:
+   
+   Coherence threshold $\tau_c$ controls minimum answer quality
+   
+   Embedding threshold $\tau_n$ prevents semantic redundancy
+   
+   LLM similarity threshold (optional) provides additional diversity checking
 
 Results will be saved to `results.json` and can be visualized using the included visualization tool.
 
