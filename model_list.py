@@ -1,7 +1,6 @@
 models = [
     "openai/gpt-4o-2024-08-06",
     "openai/gpt-4o-2024-05-13",
-    "openai/gpt-4o-2024-11-20",
     "openai/gpt-4o-mini-2024-07-18",
     "openai/gpt-4-0314",
     "openai/gpt-4-1106-preview",
@@ -9,6 +8,8 @@ models = [
     "openai/chatgpt-4o-latest",
     "openai/o1-mini",
     "openai/o1-preview",
+    "openai/o1",
+    "o3-mini-2024-12-17",
     "meta-llama/llama-3.1-8b-instruct",
     "meta-llama/llama-3.1-70b-instruct",
     "meta-llama/llama-3.1-405b-instruct",
@@ -17,6 +18,7 @@ models = [
     "meta-llama/llama-3.2-1b-instruct",
     "meta-llama/llama-3.2-90b-vision-instruct",
     "meta-llama/llama-3.2-11b-vision-instruct",
+    "meta-llama/llama-3.3-70b-instruct",
     "anthropic/claude-3-5-haiku-20241022",
     "anthropic/claude-3.5-sonnet",  # New Sonnet
     "anthropic/claude-3.5-sonnet-20240620",  # Old Sonnet
@@ -28,10 +30,13 @@ models = [
     "google/gemini-pro-1.5",
     "google/gemma-2-27b-it",
     "google/gemma-2-9b-it",
+    "google/gemini-2.0-flash-exp",
+    "google/gemini-2.0-flash-thinking-exp-1219",
+    "google/gemini-exp-1206",
     "x-ai/grok-beta",
     "mistralai/mixtral-8x22b-instruct",
     "mistralai/mistral-large-latest",
-    "mistralai/mistral-7b-instruct-v0.3",
+    "mistralai/mistral-7b-instruct-v0.3"
 ]
 
 model_prices = [
