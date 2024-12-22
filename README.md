@@ -8,7 +8,7 @@ Some models feel competent despite under-scoring on benchmarks like MMLU, GPQA, 
 3. Contextual attention
 4. Instruction following
 
-**Aidan Bench is weakly correlated with Lmsys, has no score ceiling, and aligns with real-world open-ended use.**
+**Aidan Bench is weakly correlated with LMSYS Arena scores, has no score ceiling, and aligns with real-world open-ended use.**
 
 # Methodology
 
@@ -26,22 +26,44 @@ We give LLMs a set of open-ended questions spanning various domains:
 
 For each question, we ask the model to generate novel answers while avoiding previous responses. The benchmark continues generating answers until either:
 
-1. The answer becomes incoherent (coherence score ≤ 15/100)
-2. The answer is too similar to previous responses (embedding similarity ≥ 0.85)
+1. The answer becomes incoherent ($C \leq 15/100$)
+2. The answer is too similar to previous responses ($N \leq 0.15$)
 
 ## Scoring System
 
-For each question q and model M, we compute the score S_M(q) as the maximum number of valid responses that satisfy both coherence and novelty thresholds:
+Given a language model $\mathcal{M}$ and question $q$, we compute the score $S_{\mathcal{M}}(q)$ as:
 
-1. **Coherence Score (C)**: Each response is evaluated by a judge model (o1-mini) on a scale of 0-100. Responses must maintain C > 15 to be considered valid.
+$$
+S_{\mathcal{M}}(q) = \max\{n \in \mathbb{N} : \forall i \leq n, r_i \in V(R_{i-1})\}
+$$
 
-2. **Novelty Score (N)**: For each new response r, we compute:
-   ```
-   N = 1 - max(cosine_similarity(e_new, e_prev))
-   ```
-   where e_new is the embedding of the new response and e_prev are embeddings of all previous responses. Responses must maintain N > 0.15 to be considered valid.
+where $r_i = \mathcal{M}(q, R_{i-1})$ represents the $i$-th generated response and $R_i = \{r_1, ..., r_i\}$ captures the response history. The validity function $V(R)$ enforces our termination criteria:
 
-The final score for a model is the sum of valid responses across all questions before either threshold is breached. This straightforward scoring mechanism offers:
+$$
+V(R) = \{r : C(r) > \tau_c \land N(r, R) > \tau_n\}
+$$
+
+1. **Coherence Score** $C(r)$: Each response is evaluated by a judge model $\mathcal{J}$ (o1-mini) on a scale of $[0, 100]$:
+
+   $$
+   C(r) = \mathcal{J}(q, r)
+   $$
+
+2. **Novelty Score** $N(r, R)$: For each new response $r$, we compute:
+
+   $$
+   N(r, R) = 1 - \max_{r' \in R} \frac{e(r) \cdot e(r')}{\|e(r)\| \|e(r')\|}
+   $$
+
+   where $e(r)$ denotes the response embedding.
+
+The final AidanBench score aggregates performance across all questions $Q$:
+
+$$
+S_{\mathcal{M}} = \sum_{q \in Q} S_{\mathcal{M}}(q)
+$$
+
+This straightforward scoring mechanism offers:
 
 - Clear interpretability ("Model X generated Y unique answers")
 - Robustness through simple failure detection
@@ -102,8 +124,8 @@ The script will guide you through several choices:
    - Use of LLM judge for similarity scoring
 
 3. Set thresholds (optional)
-   - Coherence score threshold
-   - Embedding similarity threshold
+   - Coherence score threshold ($\tau_c$)
+   - Embedding similarity threshold ($\tau_n$)
    - LLM similarity threshold (if using LLM judge)
 
 Results will be saved to `results.json` and can be visualized using the included visualization tool.
