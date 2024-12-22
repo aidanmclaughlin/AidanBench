@@ -43,13 +43,13 @@ $$
 V(R) = \{r : C(r) > \tau_c \land N(r, R) > \tau_n\}
 $$
 
-1. **Coherence Score** $C(r)$: Each response is evaluated by a judge model $\mathcal{J}$ (o1-mini) on a scale of $[0, 100]$:
+**Coherence Score** $C(r)$: Each response is evaluated by a judge model $\mathcal{J}$ (o1-mini) on a scale of $[0, 100]$:
 
    $$
    C(r) = \mathcal{J}(q, r)
    $$
 
-2. **Novelty Score** $N(r, R)$: For each new response $r$, we compute:
+**Novelty Score** $N(r, R)$: For each new response $r$, we compute:
 
    $$
    N(r, R) = 1 - \max_{r' \in R} \frac{e(r) \cdot e(r')}{\|e(r)\| \|e(r')\|}
@@ -63,10 +63,7 @@ $$
 S_{\mathcal{M}} = \sum_{q \in Q} S_{\mathcal{M}}(q)
 $$
 
-This scoring mechanism is:
-- Clear and interpretable
-- Robust through failure detection
-- Reliable with objective thresholds
+
 
 # Results
 
