@@ -2,14 +2,12 @@ models = [
     "openai/gpt-4o-2024-08-06",
     "openai/gpt-4o-2024-05-13",
     "openai/gpt-4o-mini-2024-07-18",
-    "openai/gpt-4-0314",
     "openai/gpt-4-1106-preview",
     "openai/gpt-4-turbo",  # Newest Turbo
     "openai/chatgpt-4o-latest",
     "openai/o1-mini",
     "openai/o1-preview",
     "openai/o1",
-    "o3-mini-2024-12-17",
     "meta-llama/llama-3.1-8b-instruct",
     "meta-llama/llama-3.1-70b-instruct",
     "meta-llama/llama-3.1-405b-instruct",
@@ -36,7 +34,8 @@ models = [
     "x-ai/grok-beta",
     "mistralai/mixtral-8x22b-instruct",
     "mistralai/mistral-large-latest",
-    "mistralai/mistral-7b-instruct-v0.3"
+    "mistralai/mistral-7b-instruct-v0.3",
+    "deepseek/deepseek-chat"
 ]
 
 model_prices = [
