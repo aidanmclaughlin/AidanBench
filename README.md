@@ -1,14 +1,14 @@
-# Aidan Bench
+# AidanBench: Stress-Testing Language Model Creativity on Open-Ended Questions
 Some models feel competent despite under-scoring on benchmarks like MMLU, GPQA, MATH, or NIAH.
 
-*Aidan Bench* rewards:
+*AidanBench* rewards:
 
 1. Creativity
 2. Reliability
 3. Contextual attention
 4. Instruction following
 
-**Aidan Bench is weakly correlated with LMSYS Arena scores, has no score ceiling, and aligns with real-world open-ended use.**
+**AidanBench penalizes mode collapse and inflexibility, has no score ceiling, and aligns with real-world open-ended use.**
 
 # Methodology
 
@@ -28,6 +28,9 @@ For each question, we ask the model to generate novel answers while avoiding pre
 
 1. The answer becomes incoherent ($C \leq 15/100$)
 2. The answer is too similar to previous responses ($N \leq 0.15$)
+<div style="text-align: center">
+<img src="assets/explanatory_figure.png" alt="AidanBench example" width="40%">
+</div>
 
 ## Scoring System
 
@@ -69,7 +72,10 @@ $$
 
 Here are the latest benchmark results across various models:
 
-![Benchmark results across models](results.png)
+
+<div style="text-align: center">
+   <img src="assets/results.png" alt="Benchmark results across models" width="60%">
+</div>
 
 We test models at temperature=0.7.
 
@@ -104,7 +110,7 @@ We test models at temperature=0.7.
 
 Run the benchmark with:
 ```bash
-python main.py
+python benchmark/main.py
 ```
 
 The script will guide you through several choices:
@@ -140,4 +146,16 @@ python -m http.server 8000
 ```
 
 Then open `http://localhost:8000/visualization` in your browser to explore the results interactively.
+
+## Citation
+
+If you find AidanBench useful in your research, please consider citing:
+```
+@inproceedings{mclaughlin2025aidanbench,
+   title={AidanBench: Stress-Testing Language Model Creativity on Open-Ended Questions}, 
+   author={Aidan McLaughlin, James Campbell, Anuja Uppuluri, Yiming Yang},
+   booktitle={NeurIPS 2024 Workshop on Language Gamification},
+   year={2024}
+}
+```
 
