@@ -28,9 +28,10 @@ For each question, we ask the model to generate novel answers while avoiding pre
 
 1. The answer becomes incoherent ($C \leq 15/100$)
 2. The answer is too similar to previous responses ($N \leq 0.15$)
-<div style="text-align: center">
-<img src="assets/explanatory_figure.png" alt="AidanBench example" width="40%">
-</div>
+
+<p align="center">
+   <img src="assets/explanatory_figure.png" alt="AidanBench example" width="40%">
+</p>
 
 ## Scoring System
 
@@ -73,9 +74,9 @@ $$
 Here are the latest benchmark results across various models:
 
 
-<div style="text-align: center">
+<p align="center">
    <img src="assets/results.png" alt="Benchmark results across models" width="60%">
-</div>
+</p>
 
 We test models at temperature=0.7.
 
