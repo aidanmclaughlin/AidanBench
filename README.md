@@ -150,13 +150,14 @@ Then open `http://localhost:8000/visualization` in your browser to explore the r
 
 ## Citation
 
-If you find AidanBench useful in your research, please consider citing:
+If you find AidanBench useful in your research, please consider citing: 
 ```
 @inproceedings{mclaughlin2025aidanbench,
    title={AidanBench: Stress-Testing Language Model Creativity on Open-Ended Questions}, 
-   author={Aidan McLaughlin, James Campbell, Anuja Uppuluri, Yiming Yang},
+   author={Aidan McLaughlin*, James Campbell*, Anuja Uppuluri*, Yiming Yang},
    booktitle={NeurIPS 2024 Workshop on Language Gamification},
    year={2024}
 }
 ```
+(* denotes equal contribution)
 
