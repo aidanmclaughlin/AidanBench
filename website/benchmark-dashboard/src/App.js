@@ -22,7 +22,12 @@ import {
   TableHead,
   TableRow,
   Paper,
+  IconButton,
 } from "@mui/material";
+
+// Import MUI icons for GitHub and ArXiv
+import GitHubIcon from "@mui/icons-material/GitHub";
+import ArticleIcon from "@mui/icons-material/Article";
 
 // Import Chart components
 import { Line } from "react-chartjs-2";
@@ -108,7 +113,9 @@ function App() {
   };
 
   // Compute aggregated metrics for each model based on the filter,
-  // summing the coherence and dissimilarity scores
+  // summing the coherence and dissimilarity scores.
+  // Total coherence is rounded to the nearest whole number,
+  // and total dissimilarity to the nearest tenth.
   const modelsMetrics = useMemo(() => {
     const metrics = [];
     for (const [modelName, params] of Object.entries(sampleData.models)) {
@@ -139,9 +146,9 @@ function App() {
         }
       }
       const totalCoherenceStr =
-        totalResponses > 0 ? sumCoherence.toFixed(2) : "0";
+        totalResponses > 0 ? Math.round(sumCoherence).toString() : "0";
       const totalDissimilarityStr =
-        totalResponses > 0 ? sumDissimilarity.toFixed(2) : "0";
+        totalResponses > 0 ? parseFloat(sumDissimilarity.toFixed(1)).toString() : "0";
 
       metrics.push({
         modelName,
@@ -178,14 +185,119 @@ function App() {
 
   return (
     <Box sx={{ p: 4 }}>
-      <Typography
-        variant="h4"
-        gutterBottom
-        align="center"
-        sx={{ fontWeight: "bold", fontSize: "1.8rem" }}
-      >
-        Benchmark Dashboard
+      {/* Intro Header */}
+      <Typography variant="h4" align="center" sx={{ fontWeight: "bold", fontSize: "2rem", mb: 1 }}>
+        AidanBench: Stress-Testing Language Model Creativity on Open-Ended Questions
       </Typography>
+      
+      {/* Authors */}
+      <Box sx={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 2, mb: 1 }}>
+        <Box sx={{ textAlign: "center" }}>
+          <a
+            href="https://aidanmclaughlin.notion.site/Aidan-McLaughlin-13424dff9b2a80608c5eec52ac79207d"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            <Typography
+              sx={{
+                fontWeight: "bold",
+                transition: "transform 0.2s",
+                "&:hover": { transform: "translateY(-2px)" },
+              }}
+            >
+              Aidan McLaughlin*<sup>1</sup>
+            </Typography>
+          </a>
+        </Box>
+        <Box sx={{ textAlign: "center" }}>
+          <a
+            href="https://jamescampbell.me"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            <Typography
+              sx={{
+                fontWeight: "bold",
+                transition: "transform 0.2s",
+                "&:hover": { transform: "translateY(-2px)" },
+              }}
+            >
+              James Campbell*<sup>2</sup>
+            </Typography>
+          </a>
+        </Box>
+        <Box sx={{ textAlign: "center" }}>
+          <a
+            href="https://www.linkedin.com/in/anujau/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            <Typography
+              sx={{
+                fontWeight: "bold",
+                transition: "transform 0.2s",
+                "&:hover": { transform: "translateY(-2px)" },
+              }}
+            >
+              Anuja Uppuluri*<sup>2</sup>
+            </Typography>
+          </a>
+        </Box>
+        <Box sx={{ textAlign: "center" }}>
+          <a
+            href="https://www.cs.cmu.edu/~./yiming/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            <Typography
+              sx={{
+                fontWeight: "bold",
+                transition: "transform 0.2s",
+                "&:hover": { transform: "translateY(-2px)" },
+              }}
+            >
+              Yiming Yang<sup>2</sup>
+            </Typography>
+          </a>
+        </Box>
+      </Box>
+      <Box sx={{ textAlign: "center", mb: 4 }}>
+        <Typography variant="caption" display="block">
+          <sup>1</sup> OpenAI (Work done while at Topology Research Corporation)
+        </Typography>
+        <Typography variant="caption" display="block">
+          <sup>2</sup> Carnegie Mellon University
+        </Typography>
+      </Box>
+
+      {/* Intro Paragraph */}
+      <Typography variant="body1" align="center" sx={{ mb: 2 }}>
+      Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder Placeholder 
+      </Typography>
+
+      {/* External Links for GitHub and ArXiv */}
+      <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 4 }}>
+        <IconButton
+          component="a"
+          href="https://github.com/aidanmclaughlin/AidanBench"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <GitHubIcon fontSize="large" />
+        </IconButton>
+        <IconButton
+          component="a"
+          href="https://arxiv.org/abs/2310.01405"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <ArticleIcon fontSize="large" />
+        </IconButton>
+      </Box>
 
       {/* Filter controls with Select/Deselect All buttons */}
       <Box
@@ -219,18 +331,10 @@ function App() {
             ))}
           </Select>
         </FormControl>
-        <Button
-          variant="contained"
-          onClick={handleSelectAll}
-          sx={{ fontWeight: "bold", fontSize: "1rem" }}
-        >
+        <Button variant="contained" onClick={handleSelectAll} sx={{ fontWeight: "bold", fontSize: "1rem" }}>
           Select All Questions
         </Button>
-        <Button
-          variant="outlined"
-          onClick={handleDeselectAll}
-          sx={{ fontWeight: "bold", fontSize: "1rem" }}
-        >
+        <Button variant="outlined" onClick={handleDeselectAll} sx={{ fontWeight: "bold", fontSize: "1rem" }}>
           Deselect All Questions
         </Button>
       </Box>
@@ -265,7 +369,7 @@ function App() {
                   sx={{
                     cursor: "pointer",
                     transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                    // Linear gradient bar effect
+                    // Linear gradient bar effect: colored portion proportional to totalResponses.
                     background: `linear-gradient(to right, ${rowColor} ${ratio}%, white ${ratio}%)`,
                     ":hover": {
                       transform: "scale(1.02)",
@@ -342,10 +446,7 @@ function App() {
                   };
 
                   return (
-                    <Box
-                      key={question}
-                      sx={{ mt: 2, pl: 2, borderLeft: 2, borderColor: "grey.300", mb: 4 }}
-                    >
+                    <Box key={question} sx={{ mt: 2, pl: 2, borderLeft: 2, borderColor: "grey.300", mb: 4 }}>
                       <Typography variant="body1" sx={{ fontSize: "1.1rem" }}>
                         {question}
                       </Typography>
