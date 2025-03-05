@@ -5,10 +5,9 @@ import seaborn as sns
 from pathlib import Path
 from typing import Dict, List, Tuple, NamedTuple, Set
 from clusters import question_w_clusters, wordcel_questions, shape_rotator_questions
-from question_list import questions
+from benchmark.question_list import questions
 from collections import defaultdict
-from model_list import lmsys_scores, release_dates, model_scales, model_prices
-
+from benchmark.model_list import lmsys_scores, release_dates, model_scales, model_prices
 from scipy import stats
 import adjustText
 
@@ -18,6 +17,7 @@ import matplotlib.dates as mdates
 import csv
 import pandas as pd
 import textwrap
+import matplotlib.colors as mcolors
 
 
 # Define company colors
@@ -27,7 +27,8 @@ COMPANY_COLORS = {
     'anthropic': '#D4C5B9',   # Anthropic beige
     'google': '#669DF7',      # Google blue
     'x-ai': '#000000',        # X black
-    'mistralai': '#F54E42'    # Mistral red
+    'mistralai': '#F54E42',   # Mistral red
+    'deepseek': '#006994'     # Deepseek ocean blue
 }
 
 # Add these constants at the top with other constants
@@ -79,19 +80,23 @@ def calculate_metrics(results: dict,
             valid_answers = 0
             
             for question, answers in questions.items():
+                # Process answers until a failure is encountered
                 for answer in answers:
-                    if (answer['embedding_dissimilarity_score'] >= min_embedding_threshold and 
-                        answer['coherence_score'] >= min_coherence_threshold):
-                        embedding_total += answer['embedding_dissimilarity_score']
-                        coherence_total += answer['coherence_score'] / 100  # Divide coherence by 100
-                        valid_answers += 1
+                    if (answer['embedding_dissimilarity_score'] < min_embedding_threshold or 
+                        answer['coherence_score'] < min_coherence_threshold):
+                        break
+                    
+                    embedding_total += answer['embedding_dissimilarity_score']
+                    coherence_total += answer['coherence_score'] / 100  # Divide coherence by 100
+                    valid_answers += 1
             
             metrics[model_name][temp] = ModelMetrics(
                 embedding_total=embedding_total,
                 coherence_total=coherence_total,
                 valid_answers=valid_answers
             )
-                
+    
+    
     return metrics
 
 def plot_metric(metrics: Dict[str, Dict[str, ModelMetrics]], 
@@ -194,12 +199,42 @@ def plot_metric(metrics: Dict[str, Dict[str, ModelMetrics]],
     plt.savefig(Path(output_dir) / figure_name, dpi=300, bbox_inches='tight')
     plt.close()
 
+def print_model_scores(results: dict,
+                      min_embedding_threshold: float = 0.15,
+                      min_coherence_threshold: float = 15.0) -> None:
+    """Print model scores sorted from highest to lowest."""
+    metrics = calculate_metrics(results, min_embedding_threshold, min_coherence_threshold)
+    
+    # Calculate total valid answers for each model
+    model_answers = {}
+    for model_name, temp_data in metrics.items():
+        max_answers = max(temp_metrics.valid_answers for temp_metrics in temp_data.values())
+        model_answers[model_name] = max_answers
+    
+    # Sort models by number of valid answers
+    sorted_models = sorted(model_answers.items(), key=lambda x: x[1], reverse=True)
+    
+    # Print results
+    print("\nModel Rankings by Valid Answers:")
+    print("-" * 60)
+    print(f"{'Rank':<6} {'Model':<40} {'Valid Answers'}")
+    print("-" * 60)
+    
+    for rank, (model, answers) in enumerate(sorted_models, 1):
+        model_name = model.split('/')[-1]  # Get just the model name without company
+        print(f"{rank:<6} {model_name:<40} {answers}")
+    print("-" * 60)
+
 def analyze_benchmark(file_path: str,
                      output_dir: str = 'plots',
                      min_embedding_threshold: float = 0.15,
                      min_coherence_threshold: float = 15.0) -> Dict[str, Dict[str, ModelMetrics]]:
     """Main function to analyze benchmark results and generate plots."""
     results = load_results(file_path)
+    
+    # Print sorted scores
+    print_model_scores(results)
+    
     metrics = calculate_metrics(
         results,
         min_embedding_threshold=min_embedding_threshold,
@@ -208,21 +243,11 @@ def analyze_benchmark(file_path: str,
     
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     
-    # Add this line to generate the new results plot
+    # Generate all plots
     plot_results(metrics, output_dir)
+    plot_model_metrics_comparison(metrics, output_dir)
     
-    # Rest of your existing plot generations...
-    plot_metric(
-        metrics,
-        "Total Embedding Dissimilarity",
-        lambda x: x.embedding_total,
-        output_dir,
-        'embedding_scores.png',
-        'Total Embedding Dissimilarity Score',
-        lambda x: f"{x:.2f}"
-    )
-    
-    # ... (rest of the function remains the same)
+    return metrics
 
 
 #####
@@ -363,6 +388,7 @@ def analyze_clusters(results_file: str,
 
 
 #####
+
 
 def get_company_from_model(model_name: str) -> str:
     """Extract company name from model name."""
@@ -810,9 +836,18 @@ def get_max_scores(results: dict,
     """
     Calculate maximum scores for each model across temperatures.
     """
-    max_scores = defaultdict(lambda: {'embedding': 0, 'coherence': 0, 'answers': 0})
+    # Initialize with hardcoded scores for specific models
+    max_scores = {
+        'openai/o3-mini-high': {'embedding': 0, 'coherence': 0, 'answers': 4936},
+        'openai/o3-mini-medium': {'embedding': 0, 'coherence': 0, 'answers': 3401},
+        'openai/o3-mini-low': {'embedding': 0, 'coherence': 0, 'answers': 2354}
+    }
     
+    # Add scores from results
     for model_name, temp_data in results['models'].items():
+        if model_name not in max_scores:
+            max_scores[model_name] = {'embedding': 0, 'coherence': 0, 'answers': 0}
+            
         for temp, questions in temp_data.items():
             embedding_total = 0
             coherence_total = 0
@@ -1060,41 +1095,91 @@ def create_parameter_plots(results: dict,
                 dpi=300, bbox_inches='tight')
     plt.close()
 
+def _calculate_effective_cost(model_price: dict) -> float:
+    """Calculate effective cost including CoT reasoning overhead."""
+    base_cost = (model_price['input_price'] + model_price['output_price']) / 2
+    
+    # Check if model uses CoT (based on reasoning_multiplier presence)
+    if 'reasoning_multplier' in model_price:  # Note the typo in the key
+        # Add CoT overhead to effective cost
+        reasoning_overhead = model_price['output_price'] * (model_price['reasoning_multplier'] - 1)
+        return base_cost + reasoning_overhead
+    
+    return base_cost
+
 def create_cost_performance_plots(results: dict,
                                 model_prices: List[dict],
                                 output_dir: str = 'plots') -> None:
     """Create scatter plots comparing model performance versus cost."""
     max_scores = get_max_scores(results)
-    cost_dict = {item['model']: (item['input_price'] + item['output_price'])/2 
-                 for item in model_prices}
+    
+    # Create a lookup dictionary for model prices
+    price_lookup = {item['model']: item for item in model_prices}
+    
+    # Calculate base and effective costs
+    base_costs = {}
+    effective_costs = {}
+    for item in model_prices:
+        model = item['model']
+        # Calculate base cost without CoT
+        base_costs[model] = (item['input_price'] + item['output_price']) / 2
+        # Calculate effective cost with CoT if applicable
+        effective_costs[model] = _calculate_effective_cost(item)
     
     fig, ax = plt.subplots(figsize=(15, 8))
     
     # Collect and sort data points by cost
     plot_data = []
     for model, scores in max_scores.items():
-        if model in cost_dict:
+        if model in effective_costs:
+            model_price = price_lookup[model]
             plot_data.append({
                 'model': model,
                 'answers': scores['answers'],
-                'cost': cost_dict[model],
-                'company': model.split('/')[0]
+                'base_cost': base_costs[model],
+                'effective_cost': effective_costs[model],
+                'company': model.split('/')[0],
+                'uses_cot': 'reasoning_multplier' in model_price
             })
     
-    # Sort by cost to help with label placement
-    plot_data.sort(key=lambda x: x['cost'])
+    # Sort by effective cost to help with label placement
+    plot_data.sort(key=lambda x: x['effective_cost'])
     
-    # Plot points
+    # Plot points and dotted lines for models with CoT
     for data in plot_data:
-        ax.scatter(data['cost'], data['answers'],
+        # Plot main point at effective cost
+        ax.scatter(data['effective_cost'], data['answers'],
                   color=COMPANY_COLORS[data['company']],
-                  alpha=0.2,  # Match label background alpha
+                  alpha=0.2,
                   s=100,
                   edgecolor=COMPANY_COLORS[data['company']],
                   linewidth=1,
                   zorder=10)
+        
+        # If model uses CoT, add dotted line and small point at base cost
+        if data['uses_cot']:
+            # Add small point at base cost
+            ax.scatter(data['base_cost'], data['answers'],
+                      color=COMPANY_COLORS[data['company']],
+                      alpha=0.1,
+                      s=50,
+                      edgecolor=COMPANY_COLORS[data['company']],
+                      linewidth=1,
+                      zorder=9)
+            
+            # Add dotted line connecting base and effective costs
+            ax.plot([data['base_cost'], data['effective_cost']], 
+                   [data['answers'], data['answers']],
+                   color=COMPANY_COLORS[data['company']],
+                   linestyle=':',
+                   alpha=0.5,  # Increased alpha for better visibility
+                   zorder=8)
     
-    # Set scales before adding labels
+    # Set both axes to log scale
+    
+    # Format x-axis to show actual cost values
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'${x:.2f}'))
+
     ax.set_xscale('log')
     ax.set_yscale('log')
     
@@ -1102,8 +1187,11 @@ def create_cost_performance_plots(results: dict,
     texts = []
     for data in plot_data:
         model_name = data['model'].split('/')[-1]
+        # Add asterisk to models using CoT
+        if data['uses_cot']:
+            model_name += '*'
         texts.append(_create_styled_label(ax,
-                                        data['cost'],
+                                        data['effective_cost'],
                                         data['answers'],
                                         model_name,
                                         COMPANY_COLORS[data['company']]))
@@ -1111,29 +1199,37 @@ def create_cost_performance_plots(results: dict,
     # Adjust labels with optimized parameters
     _adjust_labels(texts, ax)
     
-    # Calculate correlation with log values
-    log_costs = np.log10([d['cost'] for d in plot_data])
+    # Calculate correlation with log-log values
+    log_costs = np.log10([d['effective_cost'] for d in plot_data])
     log_answers = np.log10([d['answers'] for d in plot_data])
     correlation = np.corrcoef(log_costs, log_answers)[0, 1]
     
     # Add correlation text
-    plt.text(0.05, 0.95, f'Log-Scale Correlation: {correlation:.3f}',
+    plt.text(0.95, 0.05, f'Log-Log Correlation: {correlation:.3f}',
             transform=plt.gca().transAxes,
-            verticalalignment='top',
+            horizontalalignment='right',
+            verticalalignment='bottom',
             bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
     
-    plt.xlabel('Average Cost per 1K Tokens (USD, log scale)')
-    plt.ylabel('Number of Valid Answers (log scale)')
-    plt.title('Cost vs Performance')
+    # Add legend for companies and CoT indicator
+    company_elements = [plt.Line2D([0], [0], marker='o', color='w', 
+                                 markerfacecolor=color, label=company, markersize=10)
+                       for company, color in COMPANY_COLORS.items()]
     
-    # Add legend for companies
-    legend_elements = [plt.Line2D([0], [0], marker='o', color='w', 
-                                markerfacecolor=color, label=company, markersize=10)
-                     for company, color in COMPANY_COLORS.items()]
-    plt.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(1, 0.5))
+    # Add CoT indicator to legend
+    cot_element = [plt.Line2D([0], [0], linestyle=':', color='gray', 
+                             label='Pre-CoT cost', alpha=0.5)]
     
-    # Add grid that respects log scale
+    plt.legend(handles=company_elements + cot_element, 
+              loc='center left', 
+              bbox_to_anchor=(1, 0.5))
+    
+    # Add grid for both axes
     plt.grid(True, alpha=0.3, which='both')
+    
+    plt.xlabel('Cost per 1K Tokens (USD, log scale)\n* Models with Chain-of-Thought overhead (dotted lines show pre-CoT cost)')
+    plt.ylabel('Number of Valid Answers (log scale)')
+    plt.title('Cost vs Performance\n(Including Chain-of-Thought Overhead)')
     
     # Save plot
     plt.tight_layout()
@@ -1265,41 +1361,38 @@ def analyze_model_performance(results_file: str,
                             model_prices: List[dict],
                             lmsys_scores: List[dict],
                             output_dir: str = 'plots') -> None:
-    """Generate all performance analysis plots."""
-    # Load results
     with open(results_file, 'r') as f:
         results = json.load(f)
-    
-    # Create output directory
+
+    print_model_scores(results)
+
     Path(output_dir).mkdir(parents=True, exist_ok=True)
-    
-    # Calculate metrics for the results plot
+
     metrics = calculate_metrics(
         results,
         min_embedding_threshold=0.15,
         min_coherence_threshold=15.0
     )
-    
-    # Generate the results plot
+
     plot_results(metrics, output_dir)
-    
-    # Generate all other plots
+
     create_timeline_plots(results, release_dates, output_dir)
-    create_timeline_progression(results, release_dates, output_dir)
     create_parameter_plots(results, model_scales, output_dir)
     create_cost_performance_plots(results, model_prices, output_dir)
     plot_lmsys_correlation(results, lmsys_scores, output_dir)
-    plot_exit_reasons(results, model_scales, output_dir)
+    create_best_timeline_plots(results, release_dates, output_dir)
+    plot_exit_reasons(results, output_dir)
     plot_top_questions(results, output_dir)
-    
-    # Generate tables
+
+    plot_best_model_coherence_over_time(results, "Why did Rome fall?", output_dir)
+    plot_best_model_embedding_over_time(results, "Why did Rome fall?", output_dir)
+
     generate_score_tables(results_file, 'tables')
-    
 
 def plot_lmsys_correlation(results: dict,
                           lmsys_scores: List[dict],
                           output_dir: str = 'plots') -> None:
-    """Create scatter plot comparing model performance vs LMSYS scores with log scaling."""
+    """Create scatter plot comparing model performance vs LMSYS scores."""
     fig, ax = plt.subplots(figsize=(15, 8))  # Match size with other plots
     
     # Calculate max scores for each model
@@ -1332,10 +1425,6 @@ def plot_lmsys_correlation(results: dict,
                   linewidth=1,
                   zorder=10)
     
-    # Set scales before adding labels
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    
     # Add labels with adjusted positions
     texts = []
     for data in plot_data:
@@ -1349,19 +1438,19 @@ def plot_lmsys_correlation(results: dict,
     # Adjust labels with optimized parameters
     _adjust_labels(texts, ax)
     
-    # Calculate correlation with log values
-    log_lmsys = np.log10([d['lmsys_score'] for d in plot_data])
-    log_answers = np.log10([d['answers'] for d in plot_data])
-    correlation = np.corrcoef(log_lmsys, log_answers)[0, 1]
+    # Calculate correlation with linear values
+    lmsys_scores = [d['lmsys_score'] for d in plot_data]
+    answer_scores = [d['answers'] for d in plot_data]
+    correlation = np.corrcoef(lmsys_scores, answer_scores)[0, 1]
     
     # Add correlation text in same style as other plots
-    plt.text(0.05, 0.95, f'Log-Scale Correlation: {correlation:.3f}',
+    plt.text(0.05, 0.95, f'Correlation: {correlation:.3f}',
             transform=plt.gca().transAxes,
             verticalalignment='top',
             bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
     
-    plt.xlabel('LMSYS Score (log scale)')
-    plt.ylabel('Number of Valid Answers (log scale)')
+    plt.xlabel('LMSYS Score')
+    plt.ylabel('Number of Valid Answers')
     plt.title('LMSYS Score vs Performance')
     
     # Add legend for companies in same style as other plots
@@ -1370,8 +1459,8 @@ def plot_lmsys_correlation(results: dict,
                      for company, color in COMPANY_COLORS.items()]
     plt.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(1, 0.5))
     
-    # Add grid that respects log scale
-    plt.grid(True, alpha=0.3, which='both')
+    # Add grid
+    plt.grid(True, alpha=0.3)
     
     # Save plot
     plt.tight_layout()
@@ -1379,231 +1468,66 @@ def plot_lmsys_correlation(results: dict,
                 dpi=300, bbox_inches='tight')
     plt.close()
 
-def plot_exit_reasons(results: dict,
-                     model_scales: List[dict],
-                     output_dir: str = 'plots') -> None:
-    """Create a stacked bar chart showing the composition of exit reasons by model."""
+def plot_exit_reasons(results: dict, output_dir: str = 'plots') -> None:
     _set_paper_style()
-    
-    # Collect exit reason data
-    model_stats = defaultdict(lambda: {'coherence': 0, 'novelty': 0, 'total': 0})
-    scale_dict = {item['model']: item['parameters'] for item in model_scales}
-    
+
+    lab_stats = defaultdict(lambda: {'coherence': 0, 'novelty': 0, 'total': 0})
+
     for model, temp_data in results['models'].items():
+        lab = get_company_from_model(model)
         for temp, questions in temp_data.items():
             for answers in questions.values():
-                model_stats[model]['total'] += 1
-                
-                # Track if coherence break occurred first
-                coherence_break = False
-                for answer in answers:
-                    if answer['coherence_score'] < 15:
-                        coherence_break = True
-                        break
-                
+                lab_stats[lab]['total'] += 1
+                coherence_break = any(answer['coherence_score'] < 15 for answer in answers)
                 if coherence_break:
-                    model_stats[model]['coherence'] += 1
+                    lab_stats[lab]['coherence'] += 1
                 else:
-                    # All other cases (including no break) count as novelty breaks
-                    model_stats[model]['novelty'] += 1
-    
-    # Convert to percentages and prepare data for plotting
-    models = []
-    coherence_pcts = []
-    novelty_pcts = []
-    parameters = []
-    
-    for model, stats in model_stats.items():
+                    lab_stats[lab]['novelty'] += 1
+
+    labs, coherence_pcts, novelty_pcts = [], [], []
+
+    for lab, stats in lab_stats.items():
         total = stats['total']
-        if total > 0:  # Only include models with data
-            models.append(model)
+        if total > 0:
+            labs.append(lab)
             coherence_pcts.append((stats['coherence'] / total) * 100)
             novelty_pcts.append((stats['novelty'] / total) * 100)
-            parameters.append(scale_dict.get(model, 0))
-    
-    # Sort by novelty percentage (descending)
+
     sort_idx = np.argsort(novelty_pcts)[::-1]
-    
-    models = [models[i] for i in sort_idx]
+    labs = [labs[i] for i in sort_idx]
     coherence_pcts = [coherence_pcts[i] for i in sort_idx]
     novelty_pcts = [novelty_pcts[i] for i in sort_idx]
-    parameters = [parameters[i] for i in sort_idx]
-    
-    # Create figure with extra space for labels
-    fig = plt.figure(figsize=(15, 10))
-    gs = fig.add_gridspec(1, 1)
-    ax = fig.add_subplot(gs[0])
-    
-    # Plot stacked bars
-    bar_width = 0.8
-    x = np.arange(len(models))
-    
-    colors = {
-        'coherence': '#FF6B6B',  # Warm coral red for coherence breaks
-        'novelty': '#4ECDC4'     # Cool turquoise for novelty breaks
-    }
-    
-    # Plot each category
-    coherence_bars = ax.bar(x, coherence_pcts, bar_width,
-                          label='Coherence Break', color=colors['coherence'])
-    
-    novelty_bars = ax.bar(x, novelty_pcts, bar_width,
-                       label='Novelty Break', color=colors['novelty'],
-                       bottom=coherence_pcts)
-    
-    # Add percentage labels on bars
-    def add_labels(bars, percentages, bottom_vals):
-        for idx, (bar, pct) in enumerate(zip(bars, percentages)):
-            if pct > 5:  # Only show label if segment is large enough
-                height = bar.get_height()
-                y_pos = bottom_vals[idx] + height/2
-                ax.text(idx, y_pos, f'{pct:.1f}%',
-                       ha='center', va='center',
-                       fontsize=8)
-    
-    # Add labels for each segment
-    add_labels(coherence_bars, coherence_pcts, np.zeros(len(models)))
-    add_labels(novelty_bars, novelty_pcts, coherence_pcts)
-    
-    # Customize plot
-    ax.set_xticks(x)
-    ax.set_xticklabels([m.split('/')[-1] for m in models],
-                       rotation=45, ha='right')
-    ax.set_ylabel('Percentage of Sequences')
-    ax.set_title('Exit Reason Distribution by Model\n(Sorted by Novelty Break Percentage)')
-    
-    # Add legend
-    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    
-    # Add parameter count as secondary x-axis if available
-    if any(parameters):
-        ax2 = ax.twiny()
-        ax2.set_xlim(ax.get_xlim())
-        ax2.set_xticks(x)
-        ax2.set_xticklabels([f'{p:,}' if p > 0 else 'N/A' for p in parameters],
-                           rotation=45, ha='left')
-        ax2.set_xlabel('Parameter Count')
-    
-    # Add grid
-    ax.grid(True, alpha=0.3, axis='y')
-    
-    # Adjust layout and save
-    plt.subplots_adjust(right=0.85, bottom=0.2)
-    plt.savefig(Path(output_dir) / 'exit_reasons.png',
-                dpi=300, bbox_inches='tight')
-    plt.close()
 
-def create_timeline_progression(results: dict,
-                              release_dates: List[dict],
-                              output_dir: str = 'plots') -> None:
-    """
-    Create a timeline plot showing performance progression with colored arrows 
-    connecting best models for each company over time.
-    """
-    # Get maximum scores for each model
-    max_scores = get_max_scores(results)
-    
-    # Convert release dates to dict and datetime objects
-    release_dict = {item['model']: datetime.strptime(item['release_date'], '%Y-%m-%d')
-                   for item in release_dates}
-    
-    # Collect and organize data by company
-    company_data = defaultdict(list)
-    for model, scores in max_scores.items():
-        if model in release_dict:
-            company = model.split('/')[0]
-            company_data[company].append({
-                'model': model,
-                'answers': scores['answers'],
-                'date': release_dict[model]
-            })
-    
-    # Sort each company's models by date
-    for company in company_data:
-        company_data[company].sort(key=lambda x: x['date'])
-    
-    # Create the plot
-    plt.figure(figsize=(15, 8))
-    ax = plt.gca()
-    
-    # Get date range
-    all_dates = [d['date'] for company_models in company_data.values() 
-                for d in company_models]
-    min_date = min(all_dates)
-    max_date = max(all_dates)
-    date_range = (max_date - min_date).days
-    padding = timedelta(days=int(date_range * 0.1))
-    
-    # Plot points and arrows for each company
-    for company, models in company_data.items():
-        color = COMPANY_COLORS[company]
-        
-        # Plot points
-        dates = [m['date'] for m in models]
-        scores = [m['answers'] for m in models]
-        
-        plt.scatter(dates, scores,
-                   color=color,
-                   alpha=0.2,
-                   s=100,
-                   edgecolor=color,
-                   linewidth=1,
-                   zorder=10)
-        
-        # Add arrows connecting points
-        if len(models) > 1:
-            for i in range(len(models) - 1):
-                dx = (models[i+1]['date'] - models[i]['date']).days
-                dy = models[i+1]['answers'] - models[i]['answers']
-                
-                plt.arrow(models[i]['date'],
-                         models[i]['answers'],
-                         dx,
-                         dy,
-                         color=color,
-                         alpha=0.6,
-                         length_includes_head=True,
-                         head_width=max(models[i]['answers'] * 0.05, 1),
-                         head_length=date_range * 0.02,
-                         zorder=5)
-        
-        # Add labels
-        for model in models:
-            model_name = model['model'].split('/')[-1]
-            _create_styled_label(ax,
-                               model['date'],
-                               model['answers'],
-                               model_name,
-                               color)
-    
-    # Set log scale for y-axis
-    plt.yscale('log')
-    
-    # Customize plot
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-    plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
-    plt.gcf().autofmt_xdate()
-    
-    plt.xlim(min_date - padding, max_date + padding)
-    
-    plt.xlabel('Release Date')
-    plt.ylabel('Number of Valid Answers (log scale)')
-    plt.title('Model Performance Evolution Over Time\nwith Company Progression Paths')
-    
-    # Add legend for companies
-    legend_elements = [plt.Line2D([0], [0], marker='o', color=color, 
-                                label=company, markersize=10,
-                                alpha=0.8)
-                     for company, color in COMPANY_COLORS.items()]
-    plt.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(1, 0.5))
-    
-    # Add grid
-    plt.grid(True, alpha=0.3)
-    
-    # Save plot
+    print("\nExit Reason Percentages by Lab:")
+    print(f"{'Lab':<20}{'Coherence (%)':<15}{'Novelty (%)':<15}")
+    print("-" * 50)
+    for lab, coherence, novelty in zip(labs, coherence_pcts, novelty_pcts):
+        print(f"{lab:<20}{coherence:<15.2f}{novelty:<15.2f}")
+
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    y = np.arange(len(labs))
+    bar_height = 0.5
+
+    for idx, lab in enumerate(labs):
+        base_color = np.array(mcolors.to_rgb(COMPANY_COLORS.get(lab, '#CCCCCC')))
+        lighter_color = np.clip(base_color + 0.3, 0, 1)
+        ax.barh(y[idx], coherence_pcts[idx], height=bar_height, color=lighter_color, edgecolor='black', label='Coherence Break' if idx == 0 else "")
+        ax.barh(y[idx], novelty_pcts[idx], left=coherence_pcts[idx], height=bar_height, color=base_color, edgecolor='black', label='Novelty Break' if idx == 0 else "")
+
+    ax.set_yticks(y)
+    ax.set_yticklabels(labs)
+    ax.set_xlabel('Percentage of Sequences')
+    ax.set_title('Exit Reason Distribution by Lab')
+
+    handles, labels = ax.get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    ax.legend(by_label.values(), by_label.keys(), loc='best', frameon=True)
+
+    ax.grid(axis='x', alpha=0.3)
+
     plt.tight_layout()
-    plt.savefig(Path(output_dir) / 'model_timeline_progression.png',
-                dpi=300, bbox_inches='tight')
+    plt.savefig(Path(output_dir) / 'exit_reasons.png', dpi=300)
     plt.close()
 
 def plot_top_questions(results: dict, output_dir: str = 'plots', n_questions: int = 7) -> None:
@@ -1659,11 +1583,10 @@ def plot_top_questions(results: dict, output_dir: str = 'plots', n_questions: in
     ax.set_xticklabels(wrapped_labels, fontsize=8)  # Reduced font size
     
     # Move legend to the top to save horizontal space
-    plt.legend(bbox_to_anchor=(0.5, 1.15), 
-              loc='upper center', 
-              borderaxespad=0,
-              ncol=3,  # Arrange legend in 3 columns
-              fontsize=8)  # Reduced font size
+    plt.legend(bbox_to_anchor=(1.05, 0.5),
+               loc='center left',
+               borderaxespad=0,
+               fontsize=8)
     
     # Add title with padding
     plt.title('Answer Distribution - Top 7 Most Answered Questions', 
@@ -1684,8 +1607,9 @@ def plot_top_questions(results: dict, output_dir: str = 'plots', n_questions: in
     plt.close()
 
 def plot_results(metrics: Dict[str, Dict[str, ModelMetrics]], 
-                output_dir: str = 'plots') -> None:
-    """Create a simple horizontal bar chart showing overall model results, highest at top."""
+                output_dir: str = 'plots',
+                top_n: int = 25) -> None:
+    """Create a simple horizontal bar chart showing top N model results, highest at top."""
     _set_paper_style()
     
     # Calculate total valid answers for each model
@@ -1693,8 +1617,8 @@ def plot_results(metrics: Dict[str, Dict[str, ModelMetrics]],
                              for temp in metrics[model].keys())
                    for model in metrics.keys()}
     
-    # Sort models by score
-    sorted_items = sorted(model_scores.items(), key=lambda x: x[1], reverse=True)
+    # Sort models by score and take top N
+    sorted_items = sorted(model_scores.items(), key=lambda x: x[1], reverse=True)[:top_n]
     models, values = zip(*sorted_items)
     
     # Set up the plot with swapped dimensions for horizontal layout
@@ -1719,7 +1643,7 @@ def plot_results(metrics: Dict[str, Dict[str, ModelMetrics]],
     
     # Customize the plot
     plt.xlabel('Number of Valid Responses')
-    plt.title('Model Results')
+    plt.title(f'Top {top_n} Model Results')
     
     # Position model names on y-axis
     plt.yticks(positions, 
@@ -1742,11 +1666,449 @@ def plot_results(metrics: Dict[str, Dict[str, ModelMetrics]],
     # Save the plot
     plt.savefig(Path(output_dir) / 'results.png', dpi=300, bbox_inches='tight')
     plt.close()
+    
+    # Also generate the metrics comparison plot
+    plot_model_metrics_comparison(metrics, output_dir)
+
+def plot_model_metrics_comparison(metrics: Dict[str, Dict[str, ModelMetrics]], 
+                                output_dir: str = 'plots') -> None:
+    """Create two horizontal bar charts showing embedding, coherence, and valid answers for each model,
+    split into top 50% and bottom 50% by total answers."""
+    _set_paper_style()
+    
+    # Paper dimensions in inches (8.5 x 11)
+    PAPER_WIDTH = 8.5
+    PAPER_HEIGHT = 11
+    # Account for margins
+    MARGIN = 0.5
+    PLOT_WIDTH = PAPER_WIDTH - (2 * MARGIN)
+    PLOT_HEIGHT = PAPER_HEIGHT - (2 * MARGIN)
+    
+    # Calculate total scores for each model and metric
+    model_scores = {}
+    for model in metrics.keys():
+        # Get maximum scores across temperatures
+        max_embedding = max(metrics[model][temp].embedding_total for temp in metrics[model].keys())
+        max_coherence = max(metrics[model][temp].coherence_total for temp in metrics[model].keys())
+        max_answers = max(metrics[model][temp].valid_answers for temp in metrics[model].keys())
+        
+        model_scores[model] = {
+            'embedding': max_embedding,
+            'coherence': max_coherence,
+            'answers': max_answers
+        }
+    
+    # Sort models by total valid answers
+    sorted_models = sorted(model_scores.keys(), 
+                         key=lambda x: model_scores[x]['answers'],
+                         reverse=True)
+    
+    # Split models into top and bottom 50%
+    mid_point = len(sorted_models) // 2
+    top_models = sorted_models[:mid_point]
+    bottom_models = sorted_models[mid_point:]
+    
+    metrics_config = [
+        ('answers', 'Valid Answers', 1.0),
+        ('coherence', 'Coherence Score', 0.7),
+        ('embedding', 'Embedding Score', 0.4)
+    ]
+    
+    # Function to create a single plot
+    def create_plot(models: List[str], title_prefix: str) -> None:
+        # Create figure with paper dimensions
+        plt.figure(figsize=(PAPER_WIDTH, PAPER_HEIGHT))
+        
+        # Create subplot with margins
+        plt.subplots_adjust(left=MARGIN/PAPER_WIDTH,
+                          right=1-MARGIN/PAPER_WIDTH,
+                          top=1-MARGIN/PAPER_HEIGHT,
+                          bottom=MARGIN/PAPER_HEIGHT)
+        
+        # Create bars for each metric
+        bar_height = 0.25
+        positions = np.arange(len(models))[::-1]  # Reverse for top-to-bottom order
+        
+        # Plot each metric
+        for metric, label, alpha in metrics_config:
+            values = [model_scores[model][metric] for model in models]
+            
+            # Create bars with company colors
+            for i, (model, value) in enumerate(zip(models, values)):
+                company = model.split('/')[0]
+                plt.barh(positions[i] - (bar_height * (metrics_config.index((metric, label, alpha)) - 1)),
+                        value,
+                        height=bar_height,
+                        color=COMPANY_COLORS[company],
+                        alpha=alpha,
+                        label=label if i == 0 else "")
+                
+                # Add value label with adjusted font size
+                plt.text(value + max(values) * 0.01,
+                        positions[i] - (bar_height * (metrics_config.index((metric, label, alpha)) - 1)),
+                        f"{value:.1f}" if metric != 'answers' else str(int(value)),
+                        va='center',
+                        fontsize=8)  # Smaller font for better fit
+        
+        # Customize the plot
+        plt.xlabel('Score Value', fontsize=10)
+        plt.title(f'{title_prefix} Model Metrics Comparison', 
+                 pad=20,  # Add padding for title
+                 fontsize=12)
+        
+        # Position model names with adjusted font size
+        plt.yticks(positions, [m.split('/')[-1] for m in models], fontsize=8)
+        
+        # Add legends with adjusted positions and sizes
+        # Metric legend at the top
+        metric_legend = plt.legend(loc='upper center', 
+                                 bbox_to_anchor=(0.5, 1.1),
+                                 ncol=3,
+                                 title='Metrics',
+                                 fontsize=8,
+                                 title_fontsize=9)
+        plt.gca().add_artist(metric_legend)
+        
+        # Company color legend on the right
+        company_legend = [plt.Rectangle((0,0),1,1, facecolor=color, label=company) 
+                         for company, color in COMPANY_COLORS.items()]
+        plt.legend(handles=company_legend,
+                  bbox_to_anchor=(1.02, 1),
+                  loc='upper left',
+                  title='Companies',
+                  fontsize=8,
+                  title_fontsize=9)
+        
+        # Add grid and adjust layout
+        plt.grid(True, alpha=0.3, axis='x')
+        
+        # Ensure there's enough space for labels
+        plt.margins(x=0.15)
+        
+        # Save the plot with high DPI for print quality
+        plt.savefig(Path(output_dir) / f'model_metrics_comparison_{title_prefix.lower().replace(" ", "_")}.png', 
+                    dpi=300,
+                    bbox_inches='tight',
+                    pad_inches=MARGIN)  # Add padding
+        plt.close()
+    
+    # Create both plots
+    create_plot(top_models, "Top 50%")
+    create_plot(bottom_models, "Bottom 50%")
+
+def plot_best_model_coherence_over_time(results: dict, question: str, output_dir: str = 'plots') -> None:
+    _set_paper_style()
+    plt.figure(figsize=(12, 6))
+
+    best_models = {}
+    for model, temps in results['models'].items():
+        lab = model.split('/')[0]
+        best_score = -1
+        best_temp = None
+        for temp, questions in temps.items():
+            if question in questions:
+                scores = [ans['coherence_score'] for ans in questions[question]]
+                avg_score = np.mean(scores)
+                if avg_score > best_score:
+                    best_score = avg_score
+                    best_temp = scores
+        if best_temp:
+            best_models[lab] = best_temp
+
+    for lab, scores in best_models.items():
+        plt.plot(scores, label=lab, color=COMPANY_COLORS.get(lab, '#333333'))
+
+    plt.axhline(y=15, color='red', linestyle='--', label='Threshold (15)')
+    plt.xlabel('Answer Index')
+    plt.ylabel('Coherence Score')
+    plt.title(f'Best Model Coherence Scores Over Time for "{question}"')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(Path(output_dir) / f'best_model_coherence_{question.replace(" ", "_")}.png', dpi=300)
+    plt.close()
+
+
+def plot_best_model_embedding_over_time(results: dict, question: str, output_dir: str = 'plots') -> None:
+    _set_paper_style()
+    plt.figure(figsize=(12, 6))
+
+    best_models = {}
+    for model, temps in results['models'].items():
+        lab = model.split('/')[0]
+        best_score = -1
+        best_temp = None
+        for temp, questions in temps.items():
+            if question in questions:
+                scores = [ans['embedding_dissimilarity_score'] for ans in questions[question]]
+                avg_score = np.mean(scores)
+                if avg_score > best_score:
+                    best_score = avg_score
+                    best_temp = scores
+        if best_temp:
+            best_models[lab] = best_temp
+
+    for lab, scores in best_models.items():
+        plt.plot(scores, label=lab, color=COMPANY_COLORS.get(lab, '#333333'))
+
+    plt.axhline(y=0.15, color='red', linestyle='--', label='Threshold (0.15)')
+    plt.xlabel('Answer Index')
+    plt.ylabel('Embedding Dissimilarity Score')
+    plt.title(f'Best Model Embedding Scores Over Time for "{question}"')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(Path(output_dir) / f'best_model_embedding_{question.replace(" ", "_")}.png', dpi=300)
+    plt.close()
+
+def plot_average_model_coherence_over_time(results: dict, output_dir: str = 'plots') -> None:
+    _set_paper_style()
+    plt.figure(figsize=(12, 6))
+
+    avg_scores = defaultdict(list)
+
+    for model, temps in results['models'].items():
+        lab = model.split('/')[0]
+        for temp, questions in temps.items():
+            for answers in questions.values():
+                scores = [ans['coherence_score'] for ans in answers]
+                avg_scores[lab].extend(scores)
+
+    for lab, scores in avg_scores.items():
+        avg_score = np.mean(scores)
+        plt.plot([avg_score] * len(scores), label=lab, color=COMPANY_COLORS.get(lab, '#333333'))
+
+    plt.axhline(y=15, color='red', linestyle='--', label='Threshold (15)')
+    plt.xlabel('Answer Index')
+    plt.ylabel('Average Coherence Score')
+    plt.title('Average Model Coherence Scores Over Time Across All Questions')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(Path(output_dir) / 'average_model_coherence.png', dpi=300)
+    plt.close()
+
+def plot_average_model_embedding_over_time(results: dict, output_dir: str = 'plots') -> None:
+    _set_paper_style()
+    plt.figure(figsize=(12, 6))
+
+    avg_scores = defaultdict(list)
+
+    for model, temps in results['models'].items():
+        lab = model.split('/')[0]
+        for temp, questions in temps.items():
+            for answers in questions.values():
+                scores = [ans['embedding_dissimilarity_score'] for ans in answers]
+                avg_scores[lab].extend(scores)
+
+    for lab, scores in avg_scores.items():
+        avg_score = np.mean(scores)
+        plt.plot([avg_score] * len(scores), label=lab, color=COMPANY_COLORS.get(lab, '#333333'))
+
+    plt.axhline(y=0.15, color='red', linestyle='--', label='Threshold (0.15)')
+    plt.xlabel('Answer Index')
+    plt.ylabel('Average Embedding Dissimilarity Score')
+    plt.title('Average Model Embedding Scores Over Time Across All Questions')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(Path(output_dir) / 'average_model_embedding.png', dpi=300)
+    plt.close()
+
+def plot_bottom_questions(results: dict, output_dir: str = 'plots', n_questions: int = 7) -> None:
+    _set_paper_style()
+
+    question_totals = defaultdict(int)
+    for model_data in results['models'].values():
+        for temp_data in model_data.values():
+            for question, answers in temp_data.items():
+                question_totals[question] += len(answers)
+
+    bottom_questions = sorted(question_totals.items(), key=lambda x: x[1])[:n_questions]
+
+    plot_data = []
+    for question, _ in bottom_questions:
+        for model, temp_data in results['models'].items():
+            company = model.split('/')[0]
+            for temp, questions in temp_data.items():
+                if question in questions:
+                    plot_data.append({
+                        'Question': question,
+                        'Company': company,
+                        'Answers': len(questions[question])
+                    })
+
+    df = pd.DataFrame(plot_data)
+
+    plt.figure(figsize=(8, 5))
+
+    sns.violinplot(data=df,
+                   x='Question',
+                   y='Answers',
+                   hue='Company',
+                   palette=COMPANY_COLORS,
+                   inner='points',
+                   scale='width',
+                   cut=0)
+
+    plt.xticks(rotation=45, ha='right')
+
+    ax = plt.gca()
+    labels = ax.get_xticklabels()
+    wrapped_labels = [textwrap.fill(label.get_text(), width=20) for label in labels]
+    ax.set_xticklabels(wrapped_labels, fontsize=8)
+
+    plt.legend(bbox_to_anchor=(0.5, .55), 
+               loc='upper center', 
+               borderaxespad=0,
+               ncol=3,
+               fontsize=8)
+
+    plt.title('Answer Distribution - Bottom 7 Least Answered Questions', 
+              pad=30,
+              fontsize=10)
+
+    plt.subplots_adjust(top=0.85,
+                        bottom=0.25,
+                        right=0.95,
+                        left=0.1)
+
+    plt.savefig(Path(output_dir) / 'bottom_questions_distribution.png',
+                dpi=300,
+                bbox_inches='tight',
+                pad_inches=0.2)
+    plt.close()
+
+# New function to plot only the best models with an exponential fit
+def create_best_timeline_plots(results: dict,
+                               release_dates: List[dict],
+                               output_dir: str = 'plots') -> None:
+    """
+    Create a scatter plot of the best model performances over time (across all labs),
+    ignoring any model that reduces performance versus any previously released model
+    in the entire set. The data points are then fitted to a smoother exponential
+    curve by applying a 2nd-degree polynomial in log space.
+    """
+
+    # Get maximum scores for each model
+    max_scores = get_max_scores(results)
+
+    # Convert release dates to dict and datetime objects
+    release_dict = {
+        item['model']: datetime.strptime(item['release_date'], '%Y-%m-%d')
+        for item in release_dates
+    }
+
+    # Gather all models into a single list (across all labs),
+    # sorted by release date, excluding 'grok'.
+    all_models = []
+    for model, scores in max_scores.items():
+        if model in release_dict:
+            company = model.split('/')[0]
+            if company == 'x-ai':
+                continue  # <-- Skip "grok" entirely
+            all_models.append({
+                'model': model,
+                'answers': scores['answers'],
+                'date': release_dict[model],
+                'company': company
+            })
+
+    # Sort by release date
+    all_models.sort(key=lambda x: x['date'])
+
+    # Keep track of the globally best "answers" so far.
+    # If a new model does not exceed that, we skip it.
+    best_so_far = float('-inf')
+    best_plot_data = []
+    for m in all_models:
+        if m['answers'] > best_so_far:
+            best_plot_data.append(m)
+            best_so_far = m['answers']
+
+    # If there's nothing to plot, return
+    if not best_plot_data:
+        return
+
+    # Create scatter plot
+    plt.figure(figsize=(15, 8))
+
+    # Plot points
+    for data in best_plot_data:
+        plt.scatter(
+            data['date'], data['answers'],
+            color=COMPANY_COLORS[data['company']],
+            alpha=0.2,
+            s=100,
+            edgecolor=COMPANY_COLORS[data['company']],
+            linewidth=1,
+            zorder=10
+        )
+        # Label each point
+        model_name = data['model'].split('/')[-1]
+        _create_styled_label(
+            plt.gca(), data['date'], data['answers'],
+            model_name,
+            COMPANY_COLORS[data['company']]
+        )
+
+    # Convert dates to numeric (days) for fitting
+    min_date = min(d['date'] for d in best_plot_data)
+    x_numeric = np.array([(d['date'] - min_date).days for d in best_plot_data])
+    y_numeric = np.array([d['answers'] for d in best_plot_data])
+
+    # Fit a simple exponential curve (y = A * exp(B * x))
+    B, log_A = np.polyfit(x_numeric, np.log(y_numeric), 1)
+    A = np.exp(log_A)
+
+    # Generate a smooth range of x values
+    x_fit = np.linspace(x_numeric.min(), x_numeric.max(), num=300)
+    y_fit = A * np.exp(B * x_fit)
+    x_fit_dates = [min_date + timedelta(days=float(val)) for val in x_fit]
+
+    # plt.plot(x_fit_dates, y_fit, 'r--', label='Exponential Fit')
+
+    # Create a text box in the upper-left corner with the fit coefficients
+    ax = plt.gca()
+    fit_text = (
+        f"Fit Coefficients (y = A·exp(B·x)):\n"
+        f"A={A:.3g}, B={B:.3g}"
+    )
+    ax.text(
+        0.05, 0.95, fit_text,
+        transform=ax.transAxes,
+        ha='left', va='top',
+        bbox=dict(facecolor='white', alpha=0.5)
+    )
+
+    # Format x-axis as dates
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+    plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
+    plt.gcf().autofmt_xdate()
+
+    plt.xlabel('Release Date')
+    plt.ylabel('Number of Valid Answers')
+    plt.title('State of the Art Model Performances Over Time')
+
+    # Legend for labs + line
+    legend_elements = [
+        plt.Line2D([0], [0], marker='o', color='w',
+                   markerfacecolor=color, label=company, markersize=10)
+        for company, color in COMPANY_COLORS.items()
+    ]
+    legend_elements.append(
+        plt.Line2D([0], [0], color='r', linestyle='--', label='Exponential Fit')
+    )
+    plt.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(1, 0.5))
+
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(Path(output_dir) / 'model_timeline_best.png', dpi=300, bbox_inches='tight')
+    plt.close()
 
 if __name__ == "__main__":
-    from model_list import release_dates, model_scales, model_prices, lmsys_scores
+    from benchmark.model_list import release_dates, model_scales, model_prices, lmsys_scores
     
-    # Run the analysis with LMSYS scores
     analyze_model_performance(
         results_file='results.json',
         release_dates=release_dates,
