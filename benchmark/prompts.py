@@ -108,5 +108,5 @@ def judge_similarity(question: str, answer1: str, answer2: str, model_name: str)
 
 def _extract_xml_content(text: str, tag: str) -> str:
     pattern = f"<{tag}>(.*?)</{tag}>"
-    match = re.search(pattern, text, re.DOTALL)
-    return match.group(1).strip() if match else text
+    matches = re.findall(pattern, text, re.DOTALL)
+    return matches[-1].strip() if matches else text

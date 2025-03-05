@@ -55,12 +55,10 @@ questions = [
     "How can a perfumer increase the sillage of their scent?",
     "What can an artist who enjoys Basquiat’s art take inspiration from?",
     "Provide a proof for the Pythagorean theorem.",
-    "Tell me what colors of oil paints to mix to make a novel color that a mantis shrimp could see but a human could not.",
     "A perfumer is creating a unique, unisex scent with benzoin and vanilla middle notes, what base and top notes should they add?",
     "What is a non poisonous recipe nobody has prepared before?",
     "Design an earring that would complement someone with a round face and small ears.",
     "Devise a strategy for me to always find gems when I mine in Webkinz World’s mines.",
-    "Make a setlist of 3 songs for a female and nonbinary membered university acapella group.",
     "What is a human value to align a large language model on?",
     "Give me a proof to Euclid's theorem of the infinitude of primes.",
     "Give a proof for the Cauchy-Schwarz Inequality."
