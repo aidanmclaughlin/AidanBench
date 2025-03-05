@@ -122,7 +122,7 @@ def _get_temperature_configuration() -> list[float]:
             print(f"{ERROR_COLOR}Invalid temperature. Please enter a number between 0.0 and 1.0.{Style.RESET_ALL}")
     return [round(t * 0.2, 1) for t in range(6)]
 
-def _get_num_questions() -> int | None:
+def _get_num_questions() -> int:
     """Get number of questions to process."""
     while True:
         num_q = input("\nNumber of questions (press Enter for all): ").strip()

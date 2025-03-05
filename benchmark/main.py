@@ -16,7 +16,7 @@ def run_benchmark(
     chain_of_thought: bool = False,
     use_llm: bool = False,
     multithreaded: bool = True,
-    num_questions: int | None = None,
+    num_questions: int = None,
     results_file: str = 'results.json',
     thresholds: dict = None
 ) -> None:
@@ -57,10 +57,6 @@ def _validate_environment() -> None:
         print(
             f"{Fore.RED}Error: Missing required environment variable: OPENAI_API_KEY{Style.RESET_ALL}")
         sys.exit(1)
-    if not os.getenv("OPEN_ROUTER_KEY"):
-        print(
-            f"{Fore.RED}Error: Missing required environment variable: OPEN_ROUTER_KEY{Style.RESET_ALL}")
-        sys.exit(1)
 
 
 def _run_benchmarks(questions, models, temperatures, chain_of_thought, use_llm, results, multithreaded, results_file, thresholds):
@@ -80,7 +76,7 @@ def _run_benchmarks(questions, models, temperatures, chain_of_thought, use_llm, 
 
 
 def _run_multithreaded(model_params, chain_of_thought, use_llm, results, results_file, thresholds):
-    with ThreadPoolExecutor(max_workers=100) as executor:
+    with ThreadPoolExecutor(max_workers=20) as executor:
         all_futures = []
         active_models = []
 

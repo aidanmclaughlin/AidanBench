@@ -4,6 +4,7 @@ models = [
     "openai/gpt-4o-mini-2024-07-18",
     "openai/gpt-4-1106-preview",
     "openai/gpt-4-turbo",  # Newest Turbo
+    "openai/gpt-4.5-preview",
     "openai/chatgpt-4o-latest",
     "openai/o1-mini",
     "openai/o1-preview",
@@ -18,6 +19,8 @@ models = [
     "meta-llama/llama-3.2-11b-vision-instruct",
     "meta-llama/llama-3.3-70b-instruct",
     "anthropic/claude-3-5-haiku-20241022",
+    "anthropic/claude-3.7-sonnet:thinking",
+    "anthropic/claude-3.7-sonnet",
     "anthropic/claude-3.5-sonnet",  # New Sonnet
     "anthropic/claude-3.5-sonnet-20240620",  # Old Sonnet
     "anthropic/claude-3-sonnet",
@@ -30,23 +33,30 @@ models = [
     "google/gemma-2-9b-it",
     "google/gemini-2.0-flash-exp",
     "google/gemini-2.0-flash-thinking-exp-1219",
-    "google/gemini-exp-1206",
     "x-ai/grok-beta",
     "mistralai/mixtral-8x22b-instruct",
     "mistralai/mistral-large-latest",
     "mistralai/mistral-7b-instruct-v0.3",
-    "deepseek/deepseek-chat"
+    "deepseek/deepseek-chat",
+    "openai/o3-mini:high",
+    "openai/o3-mini:medium",
+    "openai/o3-mini:low"
 ]
 
 model_prices = [
-    {'model': 'openai/gpt-4o-2024-08-06', 'input_price': 2.5, 'output_price': 10},   
+    {'model': 'openai/gpt-4o-2024-08-06', 'input_price': 2.5, 'output_price': 10},
     {'model': 'openai/gpt-4o-2024-05-13', 'input_price': 5, 'output_price': 15},
     {'model': 'openai/gpt-4o-mini-2024-07-18', 'input_price': 0.15, 'output_price': 0.6},
     {'model': 'openai/gpt-4-0314', 'input_price': 30, 'output_price': 60},
     {'model': 'openai/gpt-4-1106-preview', 'input_price': 10, 'output_price': 30},
     {'model': 'openai/gpt-4-turbo', 'input_price': 10, 'output_price': 30},
-    {'model': 'openai/o1-mini', 'input_price': 3, 'output_price': 12},
-    {'model': 'openai/o1-preview', 'input_price': 15, 'output_price': 60},
+    {'model': 'openai/gpt-4.5-preview', 'input_price': 75, 'output_price': 150},
+    {'model': 'openai/o1-mini', 'input_price': 3, 'output_price': 12, 'reasoning_multplier': 12.0},  # o1-mini: (235-31)/17
+    {'model': 'openai/o3-mini:high', 'input_price': 1.1, 'output_price': 4.4, 'reasoning_multplier': 26.823529411764707},  # o3-mini-high: (498-42)/17
+    {'model': 'openai/o3-mini:medium', 'input_price': 1.1, 'output_price': 4.4, 'reasoning_multplier': 11.882352941176471},  # o3-mini-medium: (239-37)/17
+    {'model': 'openai/o3-mini:low', 'input_price': 1.1, 'output_price': 4.4, 'reasoning_multplier': 4.352941176470588},  # o3-mini-low: (105-31)/17
+    {'model': 'openai/o1-preview', 'input_price': 15, 'output_price': 60, 'reasoning_multplier': 21.764705882352942},  # o1-preview: (409-39)/17
+    {'model': 'openai/o1', 'input_price': 15, 'output_price': 60, 'reasoning_multplier': 19.352941176470587},  # o1: (367-38)/17
     {'model': 'meta-llama/llama-3.1-8b-instruct', 'input_price': 0.05, 'output_price': 0.05},
     {'model': 'meta-llama/llama-3.1-70b-instruct', 'input_price': 0.34, 'output_price': 0.39},
     {'model': 'meta-llama/llama-3.1-405b-instruct', 'input_price': 2.75, 'output_price': 2.75},
@@ -57,6 +67,8 @@ model_prices = [
     {'model': 'meta-llama/llama-3.2-11b-vision-instruct', 'input_price': 0.055, 'output_price': 0.055},
     {'model': 'anthropic/claude-3-5-haiku-20241022', 'input_price': 1, 'output_price': 5},
     {'model': 'anthropic/claude-3.5-sonnet', 'input_price': 3, 'output_price': 15},
+    {'model': 'anthropic/claude-3.7-sonnet:thinking', 'input_price': 3, 'output_price': 15, 'reasoning_multplier': 19.9411}, # thinking: 339 / 17
+    {'model': 'anthropic/claude-3.7-sonnet', 'input_price': 3, 'output_price': 15},
     {'model': 'anthropic/claude-3.5-sonnet-20240620', 'input_price': 3, 'output_price': 15},
     {'model': 'anthropic/claude-3-sonnet', 'input_price': 3, 'output_price': 15},
     {'model': 'anthropic/claude-3-opus', 'input_price': 15, 'output_price': 75},
@@ -66,10 +78,13 @@ model_prices = [
     {'model': 'google/gemini-pro-1.5', 'input_price': 1.25, 'output_price': 5},
     {'model': 'google/gemma-2-27b-it', 'input_price': 0.27, 'output_price': 0.27},
     {'model': 'google/gemma-2-9b-it', 'input_price': 0.06, 'output_price': 0.06},
+    {'model': 'google/gemini-2.0-flash-exp', 'input_price': 0.1, 'output_price': 0.4},
+    {'model': 'google/gemini-2.0-flash-thinking-exp-1219', 'input_price': 0.1, 'output_price': 0.4, 'reasoning_multplier': 50.52941176470588},  # 2.0 thinking: (889-30)/17
     {'model': 'x-ai/grok-beta', 'input_price': 5, 'output_price': 15},
     {'model': 'mistralai/mixtral-8x22b-instruct', 'input_price': 0.9, 'output_price': 0.9},
     {'model': 'mistralai/mistral-large-latest', 'input_price': 2, 'output_price': 6},
     {'model': 'mistralai/mistral-7b-instruct-v0.3', 'input_price': 0.055, 'output_price': 0.055},
+    {'model': 'deepseek/deepseek-r1', 'input_price': 0.55, 'output_price': 2.59, 'reasoning_multplier': 18.88235294117647} # r1: (354-33)/17
 ]
 
 lmsys_scores = [
@@ -79,19 +94,21 @@ lmsys_scores = [
         {'model': 'openai/gpt-4-0314', 'lmsys_score': 1186}, # deprecated
         {'model': 'openai/gpt-4-1106-preview', 'lmsys_score': 1250}, # deprecated
         {'model': 'openai/gpt-4-turbo', 'lmsys_score': 1256}, # deprecated
+        {'model': 'openai/gpt-4.5-preview', 'lmsys_score': 1411},
         {'model': 'openai/o1-mini', 'lmsys_score': 1308},
         {'model': 'openai/o1-preview', 'lmsys_score': 1333},
+        {'model': 'openai/o1', 'lmsys_score': 1352},
+        {'model': 'openai/o3-mini:high', 'lmsys_score': 1329},
+        {'model': 'openai/o3-mini:medium', 'lmsys_score': 1304},
         {'model': 'meta-llama/llama-3.1-8b-instruct', 'lmsys_score': 1175},
         {'model': 'meta-llama/llama-3.1-70b-instruct', 'lmsys_score': 1247},
         {'model': 'meta-llama/llama-3.1-405b-instruct', 'lmsys_score': 1267},
         {'model': 'meta-llama/llama-3.1-405b-instruct:bf16', 'lmsys_score': 1266},
         {'model': 'meta-llama/llama-3.2-3b-instruct', 'lmsys_score': 1103},
         {'model': 'meta-llama/llama-3.2-1b-instruct', 'lmsys_score': 1053},
-        # {'model': 'meta-llama/llama-3.2-90b-vision-instruct', 'lmsys_score': 0.5},
-        # {'model': 'meta-llama/llama-3.2-11b-vision-instruct', 'lmsys_score': 0.5},
-        # {'model': 'anthropic/claude-3-5-haiku-20241022', 'lmsys_score': 0.5},
         {'model': 'anthropic/claude-3.5-sonnet', 'lmsys_score': 1283},
         {'model': 'anthropic/claude-3.5-sonnet-20240620', 'lmsys_score': 1268},
+        {'model': 'anthropic/claude-3.7-sonnet', 'lmsys_score': 1309},
         {'model': 'anthropic/claude-3-sonnet', 'lmsys_score': 1201},
         {'model': 'anthropic/claude-3-opus', 'lmsys_score': 1248},
         {'model': 'anthropic/claude-3-haiku', 'lmsys_score': 1179},
@@ -103,7 +120,11 @@ lmsys_scores = [
         {'model': 'x-ai/grok-beta', 'lmsys_score': 1290},
         {'model': 'mistralai/mixtral-8x22b-instruct', 'lmsys_score': 1148},
         {'model': 'mistralai/mistral-large-latest', 'lmsys_score': 1251},
-        # {'model': 'mistralai/mistral-7b-instruct-v0.3', 'lmsys_score': 0.5},
+        {'model': 'openai/chatgpt-4o-latest', 'lmsys_score': 1377},  # ChatGPT-4o-latest from image
+        {'model': 'google/gemini-2.0-flash-exp', 'lmsys_score': 1355},  # Gemini-2.0-Flash-001
+        {'model': 'google/gemini-2.0-flash-thinking-exp-1219', 'lmsys_score': 1384},  # Gemini-2.0-Flash-Thinking-Exp-01-21
+        {'model': 'deepseek/deepseek-chat', 'lmsys_score': 1316},  # DeepSeek-V3
+        {'model': 'deepseek/deepseek-r1', 'lmsys_score': 1361} # DeepSeek-R1
 ]
 
 release_dates = [
@@ -112,9 +133,12 @@ release_dates = [
     {'model': 'openai/gpt-4o-mini-2024-07-18', 'release_date': '2024-07-18'},
     {'model': 'openai/gpt-4-0314', 'release_date': '2023-03-14'},
     {'model': 'openai/gpt-4-1106-preview', 'release_date': '2023-11-06'},
-    {'model': 'openai/gpt-4-turbo', 'release_date': '2024-05-10'},
+    {'model': 'openai/gpt-4-turbo', 'release_date': '2024-04-09'},
+    {'model': 'openai/gpt-4.5-preview', 'release_date': '2025-02-27'},
+    {'model': 'openai/chatgpt-4o-latest', 'release_date': '2024-08-14'},
     {'model': 'openai/o1-mini', 'release_date': '2024-09-12'},
     {'model': 'openai/o1-preview', 'release_date': '2024-09-12'},
+    {'model': 'openai/o1', 'release_date': '2024-12-05'},
     {'model': 'meta-llama/llama-3.1-8b-instruct', 'release_date': '2024-07-23'},
     {'model': 'meta-llama/llama-3.1-70b-instruct', 'release_date': '2024-07-23'},
     {'model': 'meta-llama/llama-3.1-405b-instruct', 'release_date': '2024-07-23'},
@@ -123,7 +147,10 @@ release_dates = [
     {'model': 'meta-llama/llama-3.2-1b-instruct', 'release_date': '2024-09-25'},
     {'model': 'meta-llama/llama-3.2-90b-vision-instruct', 'release_date': '2024-09-25'},
     {'model': 'meta-llama/llama-3.2-11b-vision-instruct', 'release_date': '2024-09-25'},
+    {'model': 'meta-llama/llama-3.3-70b-instruct', 'release_date': '2024-12-06'},
     {'model': 'anthropic/claude-3-5-haiku-20241022', 'release_date': '2024-10-22'},
+    {'model': 'anthropic/claude-3.7-sonnet:thinking', 'release_date': '2025-02-24'},
+    {'model': 'anthropic/claude-3.7-sonnet', 'release_date': '2025-02-24'},
     {'model': 'anthropic/claude-3.5-sonnet', 'release_date': '2024-10-22'},
     {'model': 'anthropic/claude-3.5-sonnet-20240620', 'release_date': '2024-06-20'},
     {'model': 'anthropic/claude-3-sonnet', 'release_date': '2024-03-04'},
@@ -131,30 +158,27 @@ release_dates = [
     {'model': 'anthropic/claude-3-haiku', 'release_date': '2024-03-04'},
     {'model': 'google/gemini-flash-1.5-8b', 'release_date': '2024-10-03'},
     {'model': 'google/gemini-flash-1.5-pro', 'release_date': '2024-09-24'},
+    {'model': 'google/gemini-2.0-flash-exp', 'release_date': '2024-12-11'},
+    {'model': 'google/gemini-2.0-flash-thinking-exp-1219', 'release_date': '2024-12-19'},
     {'model': 'google/gemini-pro-1.5', 'release_date': '2024-09-24'},
     {'model': 'google/gemma-2-27b-it', 'release_date': '2024-06-27'},
     {'model': 'google/gemma-2-9b-it', 'release_date': '2024-06-27'},
     {'model': 'x-ai/grok-beta', 'release_date': '2024-08-14'},
     {'model': 'mistralai/mixtral-8x22b-instruct', 'release_date': '2024-04-17'},
-    {'model': 'mistralai/mistral-large-latest', 'release_date': '2024-07-18'},
-    {'model': 'mistralai/mistral-7b-instruct-v0.3', 'release_date': '2024-05-24'},
+    {'model': 'mistralai/mistral-large-latest', 'release_date': '2024-11-18'},
+    {'model': 'mistralai/mistral-7b-instruct-v0.3', 'release_date': '2024-05-23'},
+    {'model': 'deepseek/deepseek-chat', 'release_date': '2025-01-10'},
+    {'model': 'openai/o3-mini:high', 'release_date': '2025-01-31'},
+    {'model': 'openai/o3-mini:medium', 'release_date': '2025-01-31'},
+    {'model': 'openai/o3-mini:low', 'release_date': '2025-01-31'}
 ]
 
 model_scales = [
-    {'model': 'openai/gpt-4-0314', 'parameters': 1.8e12},
     {'model': 'meta-llama/llama-3.1-8b-instruct', 'parameters': 8e9},
     {'model': 'meta-llama/llama-3.1-70b-instruct', 'parameters': 7e10},
     {'model': 'meta-llama/llama-3.1-405b-instruct', 'parameters': 4.05e11},
-    {'model': 'meta-llama/llama-3.1-405b-instruct:bf16', 'parameters': 4.05e11},
     {'model': 'meta-llama/llama-3.2-3b-instruct', 'parameters': 3e9},
     {'model': 'meta-llama/llama-3.2-1b-instruct', 'parameters': 1e9},
-    {'model': 'meta-llama/llama-3.2-90b-vision-instruct', 'parameters': 9e10},
-    {'model': 'meta-llama/llama-3.2-11b-vision-instruct', 'parameters': 1.1e10},
-    {'model': 'google/gemini-flash-1.5-8b', 'parameters': 8e9},
-    {'model': 'google/gemma-2-27b-it', 'parameters': 2.7e10},
-    {'model': 'google/gemma-2-9b-it', 'parameters': 9e9},
-    {'model': 'mistralai/mixtral-8x22b-instruct', 'parameters': 1.76e11},
-    {'model': 'mistralai/mistral-7b-instruct-v0.3', 'parameters': 7e9},
 ]
 
 model_subset = [
