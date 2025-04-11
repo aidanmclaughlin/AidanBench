@@ -53,9 +53,16 @@ def run_benchmark(
 
 
 def _validate_environment() -> None:
+    missing_vars = []
+    
+    if not os.getenv("OPEN_ROUTER_KEY"):
+        missing_vars.append("OPEN_ROUTER_KEY")
+    
     if not os.getenv("OPENAI_API_KEY"):
-        print(
-            f"{Fore.RED}Error: Missing required environment variable: OPENAI_API_KEY{Style.RESET_ALL}")
+        missing_vars.append("OPENAI_API_KEY")
+    
+    if missing_vars:
+        print(f"{Fore.RED}Error: Missing required environment variables: {', '.join(missing_vars)}{Style.RESET_ALL}")
         sys.exit(1)
 
 

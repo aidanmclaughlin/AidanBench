@@ -31,18 +31,22 @@ models = [
     "google/gemini-pro-1.5",
     "google/gemma-2-27b-it",
     "google/gemma-2-9b-it",
+    "google/gemma-3-4b-it",
+    "google/gemma-3-12b-it",
+    "google/gemma-3-27b-it",
     "google/gemini-2.0-flash-exp",
     "google/gemini-2.0-flash-thinking-exp-1219",
     "google/gemini-2.5-pro-preview-03-25",
     "x-ai/grok-beta",
     "x-ai/grok-3-beta",
+    "x-ai/grok-3-mini-beta",
     "mistralai/mixtral-8x22b-instruct",
     "mistralai/mistral-large-latest",
     "mistralai/mistral-7b-instruct-v0.3",
     "deepseek/deepseek-chat",
     "openai/o3-mini:high",
     "openai/o3-mini:medium",
-    "openai/o3-mini:low"
+    "openai/o3-mini:low",
 ]
 
 model_prices = [
@@ -185,5 +189,9 @@ model_scales = [
 
 model_subset = [
     "google/gemini-2.5-pro-preview-03-25",
-    "x-ai/grok-3-beta"
+    "x-ai/grok-3-beta",
+    "x-ai/grok-3-mini-beta",
+    "google/gemma-3-4b-it",
+    "google/gemma-3-12b-it",
+    "google/gemma-3-27b-it",
 ]
