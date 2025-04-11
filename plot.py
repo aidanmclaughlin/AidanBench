@@ -1,3 +1,4 @@
+# %%
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -1044,9 +1045,8 @@ def create_parameter_plots(results: dict,
                   linewidth=1,
                   zorder=10)
     
-    # Set scales before adding labels
+    # Set x scale to log (keeping y scale linear)
     ax.set_xscale('log')
-    ax.set_yscale('log')
     
     # Add labels with adjusted positions
     texts = []
@@ -1061,19 +1061,19 @@ def create_parameter_plots(results: dict,
     # Adjust labels with optimized parameters
     _adjust_labels(texts, ax)
     
-    # Calculate correlation with log values
+    # Calculate correlation with log x values but linear y values
     log_params = np.log10([d['parameters'] for d in plot_data])
-    log_answers = np.log10([d['answers'] for d in plot_data])
-    correlation = np.corrcoef(log_params, log_answers)[0, 1]
+    answers = [d['answers'] for d in plot_data]
+    correlation = np.corrcoef(log_params, answers)[0, 1]
     
     # Add correlation text
-    plt.text(0.05, 0.95, f'Log-Scale Correlation: {correlation:.3f}',
+    plt.text(0.05, 0.95, f'Log-Linear Correlation: {correlation:.3f}',
             transform=plt.gca().transAxes,
             verticalalignment='top',
             bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
     
     plt.xlabel('Number of Parameters (log scale)')
-    plt.ylabel('Number of Valid Answers (log scale)')
+    plt.ylabel('Number of Valid Answers')
     plt.title('Llama Family Performance by Model Size')
     
     # Format x-axis tick labels
@@ -2106,15 +2106,15 @@ def create_best_timeline_plots(results: dict,
     plt.savefig(Path(output_dir) / 'model_timeline_best.png', dpi=300, bbox_inches='tight')
     plt.close()
 
-if __name__ == "__main__":
-    from benchmark.model_list import release_dates, model_scales, model_prices, lmsys_scores
+# if __name__ == "__main__":
+#     from benchmark.model_list import release_dates, model_scales, model_prices, lmsys_scores
     
-    analyze_model_performance(
-        results_file='results.json',
-        release_dates=release_dates,
-        model_scales=model_scales,
-        model_prices=model_prices,
-        lmsys_scores=lmsys_scores,
-        output_dir='plots'
-    )
+#     analyze_model_performance(
+#         results_file='results.json',
+#         release_dates=release_dates,
+#         model_scales=model_scales,
+#         model_prices=model_prices,
+#         lmsys_scores=lmsys_scores,
+#         output_dir='plots'
+#     )
     

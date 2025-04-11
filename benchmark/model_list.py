@@ -33,7 +33,9 @@ models = [
     "google/gemma-2-9b-it",
     "google/gemini-2.0-flash-exp",
     "google/gemini-2.0-flash-thinking-exp-1219",
+    "google/gemini-2.5-pro-preview-03-25",
     "x-ai/grok-beta",
+    "x-ai/grok-3-beta",
     "mistralai/mixtral-8x22b-instruct",
     "mistralai/mistral-large-latest",
     "mistralai/mistral-7b-instruct-v0.3",
@@ -182,9 +184,6 @@ model_scales = [
 ]
 
 model_subset = [
-    "openai/gpt-4o-mini-2024-07-18",
-    "meta-llama/llama-3.1-70b-instruct",
-    "google/gemini-flash-1.5-8b",
-    "anthropic/claude-3.5-sonnet",  # New Sonnet
-    "gpt-4-turbo"
+    "google/gemini-2.5-pro-preview-03-25",
+    "x-ai/grok-3-beta"
 ]
