@@ -20,7 +20,6 @@ def chat_with_model(prompt: str, model: str, max_tokens: int = 4000, temperature
     response = router_client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=max_tokens,
         temperature=temperature
     )
     return response.choices[0].message.content
