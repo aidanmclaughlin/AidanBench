@@ -1,5 +1,5 @@
 // Import your JSON data
-import sampleData from "./new_results.json";
+import sampleData from "./results.json";
 
 // App.js
 import React, { useState, useMemo } from "react";
