@@ -39,7 +39,9 @@ models = [
     "google/gemini-2.5-pro-preview-03-25",
     "x-ai/grok-beta",
     "x-ai/grok-3-beta",
-    "x-ai/grok-3-mini-beta",
+    "x-ai/grok-3-mini-beta:low",
+    "x-ai/grok-3-mini-beta:medium",
+    "x-ai/grok-3-mini-beta:high",
     "mistralai/mixtral-8x22b-instruct",
     "mistralai/mistral-large-latest",
     "mistralai/mistral-7b-instruct-v0.3",
@@ -188,10 +190,6 @@ model_scales = [
 ]
 
 model_subset = [
-    "google/gemini-2.5-pro-preview-03-25",
-    "x-ai/grok-3-beta",
-    "x-ai/grok-3-mini-beta",
-    "google/gemma-3-4b-it",
-    "google/gemma-3-12b-it",
-    "google/gemma-3-27b-it",
+    "x-ai/grok-3-mini-beta:medium",
+    "x-ai/grok-3-mini-beta:high",
 ]

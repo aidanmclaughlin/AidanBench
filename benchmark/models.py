@@ -17,11 +17,26 @@ openai_client = OpenAI(
 
 @retry(tries=3, delay=1, backoff=2)
 def chat_with_model(prompt: str, model: str, max_tokens: int = 4000, temperature: float = 0) -> str:
-    response = router_client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=temperature
-    )
+    # Default parameters for API call
+    params = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": temperature
+    }
+    
+    # Check if this is grok-3-mini-beta with reasoning effort specified
+    if model.startswith("x-ai/grok-3-mini-beta:"):
+        model_parts = model.split(":")
+        if len(model_parts) == 2:
+            base_model = model_parts[0]
+            reasoning_effort = model_parts[1]
+            
+            # Only accept valid reasoning effort values
+            if reasoning_effort in ["low", "medium", "high"]:
+                params["model"] = base_model
+                params["reasoning"] = {"effort": reasoning_effort}
+    
+    response = router_client.chat.completions.create(**params)
     return response.choices[0].message.content
 
 
