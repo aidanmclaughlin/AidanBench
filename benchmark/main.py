@@ -193,8 +193,24 @@ def _should_skip_question(previous_answers: list[dict], use_llm: bool, threshold
 
 
 def _save_results(results: dict, results_file: str) -> None:
-    with open(results_file, 'w') as f:
+    import tempfile
+    import shutil
+    
+    #write to temp file first to prevent corruption if interrupted
+    results_dir = os.path.dirname(os.path.abspath(results_file)) or '.'
+    
+    with tempfile.NamedTemporaryFile(mode='w', dir=results_dir, delete=False, suffix='.tmp') as f:
         json.dump(results, f, indent=2)
+        temp_file = f.name
+    
+    try:
+        #atomically replace original file
+        shutil.move(temp_file, results_file)
+    except Exception:
+        #clean up temp file on failure
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+        raise
 
 
 def _can_skip_question(results: dict, question: str, model_name: str, temperature: float, use_llm: bool, thresholds: dict) -> bool:
