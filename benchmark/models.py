@@ -21,7 +21,8 @@ def chat_with_model(prompt: str, model: str, max_tokens: int = 4000, temperature
     params = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": temperature
+        "temperature": temperature,
+        "max_tokens": max_tokens
     }
     
     # Check if this is grok-3-mini-beta with reasoning effort specified
