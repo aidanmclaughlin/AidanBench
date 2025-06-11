@@ -1,3 +1,14 @@
+#!/usr/bin/env python3
+"""
+Statistical pilot experiment to test the impact of time limits on LLM creativity benchmarks.
+
+Previous comprehensive experiment testing 5-minute limits vs unlimited time.
+Results: 5-minute limits actually improved performance slightly while solving operational delays.
+
+This file serves as the baseline for comparison with the new realistic timeout experiment
+that tests actual slow scenarios (15min, 30min, 1hr timeouts with slow models/questions).
+"""
+
 import json
 import time
 import random
@@ -19,7 +30,7 @@ if not os.environ.get("OPENAI_API_KEY"):
 from time_aware_models import chat_with_model_timed
 from prompts import judge_answer
 
-class ComprehensiveExperiment:
+class StatisticalPilotExperiment:
     def __init__(self):
         self.model_pairs = [
             #OpenAI thinking vs standard

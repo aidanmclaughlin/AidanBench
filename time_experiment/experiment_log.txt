@@ -1,0 +1,108 @@
+Starting Parallelized Timeout Experiment
+Total tests: 42
+Running in batches of 8 parallel tests
+Estimated time: 15-25 hours (vs 90+ hours sequential)
+
+Phase 1: Running fast control tests...
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+  Test 4: Error evaluating coherence: signal only works in main thread of the main interpreter
+[1/6] openai/gpt-4o-mini-2024-07-18 - early - unlimited - Rep 2: OK (4.8s)
+  Test 3: Error evaluating coherence: signal only works in main thread of the main interpreter
+[2/6] openai/gpt-4o-mini-2024-07-18 - early - unlimited - Rep 3: OK (5.0s)
+  Test 5: Error evaluating coherence: signal only works in main thread of the main interpreter
+[3/6] openai/gpt-4o-mini-2024-07-18 - early - unlimited - Rep 1: OK (5.2s)
+Fast tests completed. Saving intermediate results...
+
+Phase 2: Running slow tests in batches...
+
+Batch 1/5: 8 tests
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+  Test 7: Error evaluating coherence: signal only works in main thread of the main interpreter
+[4/42] openai/o3-mini:high - early - unlimited - Rep 3: OK (12.6s)
+  Test 10: Error evaluating coherence: signal only works in main thread of the main interpreter
+[5/42] openai/gpt-4.5-preview - early - unlimited - Rep 1: OK (14.5s)
+  Test 6: Error evaluating coherence: signal only works in main thread of the main interpreter
+[6/42] openai/o3-mini:high - late - unlimited - Rep 3: OK (32.7s)
+Batch 1 completed. 6/42 total tests done.
+
+Batch 2/5: 8 tests
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+  Test 8: Error evaluating coherence: signal only works in main thread of the main interpreter
+[7/42] openai/o3-mini:high - late - unlimited - Rep 3: OK (14.8s)
+  Test 10: Error evaluating coherence: signal only works in main thread of the main interpreter
+[8/42] openai/o3-mini:high - late - unlimited - Rep 2: OK (15.4s)
+  Test 12: Error evaluating coherence: signal only works in main thread of the main interpreter
+[9/42] openai/gpt-4.5-preview - late - unlimited - Rep 2: OK (21.8s)
+  Test 9: Error evaluating coherence: signal only works in main thread of the main interpreter
+[10/42] openai/o3-mini:high - early - unlimited - Rep 3: OK (23.1s)
+Batch 2 completed. 10/42 total tests done.
+
+Batch 3/5: 8 tests
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+  Test 11: Error evaluating coherence: signal only works in main thread of the main interpreter
+[11/42] openai/o3-mini:high - early - unlimited - Rep 1: OK (20.9s)
+  Test 18: Error evaluating coherence: signal only works in main thread of the main interpreter
+[12/42] openai/o3-mini:high - late - unlimited - Rep 1: OK (21.4s)
+  Test 15: Error evaluating coherence: signal only works in main thread of the main interpreter
+[13/42] openai/gpt-4.5-preview - late - unlimited - Rep 1: OK (22.2s)
+Batch 3 completed. 13/42 total tests done.
+
+Batch 4/5: 8 tests
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+  Test 14: Error evaluating coherence: signal only works in main thread of the main interpreter
+[14/42] openai/o3-mini:high - early - unlimited - Rep 1: OK (12.3s)
+  Test 21: Error evaluating coherence: signal only works in main thread of the main interpreter
+[15/42] openai/o3-mini:high - late - unlimited - Rep 1: OK (13.3s)
+  Test 15: Error evaluating coherence: signal only works in main thread of the main interpreter
+[16/42] openai/o3-mini:high - early - unlimited - Rep 2: OK (14.6s)
+  Test 17: Error evaluating coherence: signal only works in main thread of the main interpreter
+[17/42] openai/o3-mini:high - late - unlimited - Rep 2: OK (15.9s)
+  Test 19: Error evaluating coherence: signal only works in main thread of the main interpreter
+[18/42] openai/o3-mini:high - early - unlimited - Rep 2: OK (17.5s)
+  Test 20: Error evaluating coherence: signal only works in main thread of the main interpreter
+[19/42] openai/gpt-4.5-preview - late - unlimited - Rep 3: OK (17.8s)
+Batch 4 completed. 19/42 total tests done.
+
+Batch 5/5: 4 tests
+Test failed with error: signal only works in main thread of the main interpreter
+Test failed with error: signal only works in main thread of the main interpreter
+  Test 20: Error evaluating coherence: signal only works in main thread of the main interpreter
+[20/42] openai/gpt-4.5-preview - early - unlimited - Rep 3: OK (11.0s)
+  Test 23: Error evaluating coherence: signal only works in main thread of the main interpreter
+[21/42] openai/gpt-4.5-preview - early - unlimited - Rep 2: OK (14.6s)
+Batch 5 completed. 21/42 total tests done.
+
+Experiment complete! 21 tests saved.
+
+STATISTICAL ANALYSIS:
+
+Timeout rates by scenario:
+  slow_early     :   0.0% timeout rate (n=9)
+  slow_late      :   0.0% timeout rate (n=9)
+  control_early  :   0.0% timeout rate (n=3)
+
+Coherence scores by condition (mean ± std):
+
+  1HR TIMEOUT:
+
+  2HR TIMEOUT:
+
+  UNLIMITED TIMEOUT:
+
+Processing time statistics:
+  Slow scenarios:   17.6s avg,   32.7s max (n=18)
+  Control scenarios:    5.0s avg,    5.2s max (n=3)
