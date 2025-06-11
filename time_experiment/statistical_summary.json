@@ -1,0 +1,68 @@
+{
+  "time_limit_stats": {
+    "unlimited": {
+      "mean": 80.1923076923077,
+      "ci_low": 79.62835852762007,
+      "ci_high": 80.75625685699532,
+      "n": 1170
+    },
+    "5min": {
+      "mean": 80.77416595380667,
+      "ci_low": 80.24793215567303,
+      "ci_high": 81.30039975194032,
+      "n": 1169
+    }
+  },
+  "model_type_stats": {
+    "standard": {
+      "mean": 79.85753995830437,
+      "ci_low": 79.34928540778385,
+      "ci_high": 80.36579450882489,
+      "n": 1439
+    },
+    "thinking": {
+      "mean": 81.48333333333333,
+      "ci_low": 80.90172395047348,
+      "ci_high": 82.06494271619319,
+      "n": 900
+    }
+  },
+  "category_performance": {
+    "open_ended": 77.62820512820512,
+    "hypothetical": 80.38461538461539,
+    "analytical": 81.1923076923077,
+    "creative": 80.35897435897436,
+    "problem_solving": 81.0668380462725,
+    "practical": 82.26923076923077
+  },
+  "sample_sizes": {
+    "time_limit": {
+      "unlimited": 1170,
+      "5min": 1169
+    },
+    "model_type": {
+      "standard": 1439,
+      "thinking": 900
+    },
+    "category": {
+      "open_ended": 390,
+      "hypothetical": 390,
+      "analytical": 390,
+      "creative": 390,
+      "problem_solving": 389,
+      "practical": 390
+    },
+    "model_family": {
+      "anthropic": 720,
+      "openai": 1080,
+      "google": 180,
+      "meta-llama": 179,
+      "x-ai": 180
+    }
+  },
+  "total_successful_tests": 2339,
+  "key_findings": {
+    "time_limit_effect": 0.5818582614989793,
+    "thinking_advantage": 1.6257933750289624
+  }
+}
