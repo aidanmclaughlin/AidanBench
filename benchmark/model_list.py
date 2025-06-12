@@ -36,6 +36,9 @@ models = [
     "google/gemma-3-27b-it",
     "google/gemini-2.0-flash-exp",
     "google/gemini-2.0-flash-thinking-exp-1219",
+    "google/gemini-2.0-flash",
+    "google/gemini-2.0-flash-lite",
+    "google/gemini-2.0-pro-experimental",
     "google/gemini-2.5-pro-preview-03-25",
     "x-ai/grok-beta",
     "x-ai/grok-3-beta",
@@ -49,6 +52,26 @@ models = [
     "openai/o3-mini:high",
     "openai/o3-mini:medium",
     "openai/o3-mini:low",
+    "openai/o3",
+    "openai/o3-pro",
+    "openai/o4-mini",
+    "openai/gpt-4.1-nano",
+    "anthropic/claude-opus-4",
+    "anthropic/claude-sonnet-4",
+    "anthropic/claude-opus-4:thinking",
+    "anthropic/claude-sonnet-4:thinking",
+    "x-ai/grok-3-beta:thinking",
+    "x-ai/grok-3-mini-beta:thinking",
+    "google/gemini-2.5-pro",
+    "google/gemini-2.5-pro:thinking",
+    "google/gemini-2.5-flash:thinking",
+    "deepseek/deepseek-r1-0528",
+    "mistralai/mistral-saba-25.02",
+    "mistralai/mistral-small-3.1",
+    "mistralai/mistral-medium-3",
+    "mistralai/magistral-small",
+    "mistralai/magistral-medium",
+    "mistralai/devstral-small",
 ]
 
 model_prices = [
@@ -88,11 +111,34 @@ model_prices = [
     {'model': 'google/gemma-2-9b-it', 'input_price': 0.06, 'output_price': 0.06},
     {'model': 'google/gemini-2.0-flash-exp', 'input_price': 0.1, 'output_price': 0.4},
     {'model': 'google/gemini-2.0-flash-thinking-exp-1219', 'input_price': 0.1, 'output_price': 0.4, 'reasoning_multplier': 50.52941176470588},  # 2.0 thinking: (889-30)/17
+    {'model': 'google/gemini-2.0-flash', 'input_price': 0.075, 'output_price': 0.3},
+    {'model': 'google/gemini-2.0-flash-lite', 'input_price': 0.05, 'output_price': 0.2},
+    {'model': 'google/gemini-2.0-pro-experimental', 'input_price': 1.25, 'output_price': 5},
     {'model': 'x-ai/grok-beta', 'input_price': 5, 'output_price': 15},
     {'model': 'mistralai/mixtral-8x22b-instruct', 'input_price': 0.9, 'output_price': 0.9},
     {'model': 'mistralai/mistral-large-latest', 'input_price': 2, 'output_price': 6},
     {'model': 'mistralai/mistral-7b-instruct-v0.3', 'input_price': 0.055, 'output_price': 0.055},
-    {'model': 'deepseek/deepseek-r1', 'input_price': 0.55, 'output_price': 2.59, 'reasoning_multplier': 18.88235294117647} # r1: (354-33)/17
+    {'model': 'deepseek/deepseek-r1', 'input_price': 0.55, 'output_price': 2.59, 'reasoning_multplier': 18.88235294117647}, # r1: (354-33)/17
+    {'model': 'openai/o3', 'input_price': 20, 'output_price': 80, 'reasoning_multiplier': 30.0}, # Full o3 model
+    {'model': 'openai/o3-pro', 'input_price': 20, 'output_price': 80},
+    {'model': 'openai/o4-mini', 'input_price': 1.1, 'output_price': 4.4},
+    {'model': 'openai/gpt-4.1-nano', 'input_price': 0.5, 'output_price': 2},
+    {'model': 'anthropic/claude-opus-4', 'input_price': 15, 'output_price': 75},
+    {'model': 'anthropic/claude-sonnet-4', 'input_price': 3, 'output_price': 15},
+    {'model': 'anthropic/claude-opus-4:thinking', 'input_price': 15, 'output_price': 75, 'reasoning_multiplier': 20.0}, # Estimate based on claude-3.7-sonnet:thinking
+    {'model': 'anthropic/claude-sonnet-4:thinking', 'input_price': 3, 'output_price': 15, 'reasoning_multiplier': 20.0}, # Estimate based on claude-3.7-sonnet:thinking
+    {'model': 'x-ai/grok-3-beta:thinking', 'input_price': 5, 'output_price': 15, 'reasoning_multiplier': 25.0}, # Estimate for thinking mode
+    {'model': 'x-ai/grok-3-mini-beta:thinking', 'input_price': 5, 'output_price': 15, 'reasoning_multiplier': 15.0}, # Estimate for mini thinking
+    {'model': 'google/gemini-2.5-pro', 'input_price': 2, 'output_price': 8},
+    {'model': 'google/gemini-2.5-pro:thinking', 'input_price': 2, 'output_price': 8, 'reasoning_multiplier': 30.0},
+    {'model': 'google/gemini-2.5-flash:thinking', 'input_price': 0.15, 'output_price': 0.6, 'reasoning_multiplier': 25.0},
+    {'model': 'deepseek/deepseek-r1-0528', 'input_price': 0.55, 'output_price': 2.59, 'reasoning_multiplier': 25.0},
+    {'model': 'mistralai/mistral-saba-25.02', 'input_price': 0.5, 'output_price': 1.5},
+    {'model': 'mistralai/mistral-small-3.1', 'input_price': 0.2, 'output_price': 0.6},
+    {'model': 'mistralai/mistral-medium-3', 'input_price': 1, 'output_price': 3},
+    {'model': 'mistralai/magistral-small', 'input_price': 0.5, 'output_price': 1.5, 'reasoning_multiplier': 15.0},
+    {'model': 'mistralai/magistral-medium', 'input_price': 2, 'output_price': 6, 'reasoning_multiplier': 20.0},
+    {'model': 'mistralai/devstral-small', 'input_price': 0.3, 'output_price': 0.9}
 ]
 
 lmsys_scores = [
@@ -168,6 +214,9 @@ release_dates = [
     {'model': 'google/gemini-flash-1.5-pro', 'release_date': '2024-09-24'},
     {'model': 'google/gemini-2.0-flash-exp', 'release_date': '2024-12-11'},
     {'model': 'google/gemini-2.0-flash-thinking-exp-1219', 'release_date': '2024-12-19'},
+    {'model': 'google/gemini-2.0-flash', 'release_date': '2025-02-01'},
+    {'model': 'google/gemini-2.0-flash-lite', 'release_date': '2025-02-01'},
+    {'model': 'google/gemini-2.0-pro-experimental', 'release_date': '2025-02-01'},
     {'model': 'google/gemini-pro-1.5', 'release_date': '2024-09-24'},
     {'model': 'google/gemma-2-27b-it', 'release_date': '2024-06-27'},
     {'model': 'google/gemma-2-9b-it', 'release_date': '2024-06-27'},
@@ -178,7 +227,27 @@ release_dates = [
     {'model': 'deepseek/deepseek-chat', 'release_date': '2025-01-10'},
     {'model': 'openai/o3-mini:high', 'release_date': '2025-01-31'},
     {'model': 'openai/o3-mini:medium', 'release_date': '2025-01-31'},
-    {'model': 'openai/o3-mini:low', 'release_date': '2025-01-31'}
+    {'model': 'openai/o3-mini:low', 'release_date': '2025-01-31'},
+    {'model': 'openai/o3', 'release_date': '2025-04-16'},
+    {'model': 'openai/o3-pro', 'release_date': '2025-06-10'},
+    {'model': 'openai/o4-mini', 'release_date': '2025-04-16'},
+    {'model': 'openai/gpt-4.1-nano', 'release_date': '2025-04-01'},
+    {'model': 'anthropic/claude-opus-4', 'release_date': '2025-05-22'},
+    {'model': 'anthropic/claude-sonnet-4', 'release_date': '2025-05-22'},
+    {'model': 'anthropic/claude-opus-4:thinking', 'release_date': '2025-05-22'},
+    {'model': 'anthropic/claude-sonnet-4:thinking', 'release_date': '2025-05-22'},
+    {'model': 'x-ai/grok-3-beta:thinking', 'release_date': '2025-02-17'},
+    {'model': 'x-ai/grok-3-mini-beta:thinking', 'release_date': '2025-02-17'},
+    {'model': 'google/gemini-2.5-pro', 'release_date': '2025-03-01'},
+    {'model': 'google/gemini-2.5-pro:thinking', 'release_date': '2025-03-01'},
+    {'model': 'google/gemini-2.5-flash:thinking', 'release_date': '2025-03-01'},
+    {'model': 'deepseek/deepseek-r1-0528', 'release_date': '2025-05-29'},
+    {'model': 'mistralai/mistral-saba-25.02', 'release_date': '2025-02-17'},
+    {'model': 'mistralai/mistral-small-3.1', 'release_date': '2025-03-17'},
+    {'model': 'mistralai/mistral-medium-3', 'release_date': '2025-05-07'},
+    {'model': 'mistralai/magistral-small', 'release_date': '2025-06-10'},
+    {'model': 'mistralai/magistral-medium', 'release_date': '2025-06-10'},
+    {'model': 'mistralai/devstral-small', 'release_date': '2025-05-01'}
 ]
 
 model_scales = [
