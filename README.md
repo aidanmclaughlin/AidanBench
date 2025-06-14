@@ -98,7 +98,7 @@ We test models at temperature=0.7.
 
 2. Install required packages:
    ```bash
-   pip install numpy openai colorama retry
+   pip install -r requirements.txt
    ```
 
 3. Set up environment variables:
