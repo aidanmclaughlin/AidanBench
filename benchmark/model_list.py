@@ -259,6 +259,37 @@ model_scales = [
 ]
 
 model_subset = [
-    "x-ai/grok-3-mini-beta:medium",
-    "x-ai/grok-3-mini-beta:high",
+    # New models needing both thinking and non-thinking tests
+    "anthropic/claude-opus-4",
+    "anthropic/claude-opus-4:thinking",
+    "anthropic/claude-sonnet-4", 
+    "anthropic/claude-sonnet-4:thinking",
+    "x-ai/grok-3-beta",
+    "x-ai/grok-3-beta:thinking",
+    "x-ai/grok-3-mini-beta",
+    "x-ai/grok-3-mini-beta:thinking",
+    "google/gemini-2.0-pro",
+    "google/gemini-2.5-pro",
+    "google/gemini-2.5-pro:thinking",
+    "google/gemini-2.5-flash",
+    "google/gemini-2.5-flash:thinking",
+    
+    # New OpenAI models
+    "openai/o3-mini:high",
+    "openai/o3-mini:medium", 
+    "openai/o3-mini:low",
+    "openai/o3",
+    "openai/o3-pro",
+    "openai/o4-mini",
+    "openai/gpt-4.1-nano",
+    
+    # New other models
+    "deepseek/deepseek-r1",
+    "deepseek/deepseek-r1-0528",
+    "mistralai/mistral-saba-25.02",
+    "mistralai/mistral-small-3.1",
+    "mistralai/mistral-medium-3", 
+    "mistralai/magistral-small",
+    "mistralai/magistral-medium",
+    "mistralai/devstral-small",
 ]
