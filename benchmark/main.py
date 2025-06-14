@@ -9,6 +9,14 @@ import sys
 import time
 import os
 
+#load env vars
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+except ImportError:
+    print("python-dotenv not available, using system environment variables")
+    pass
+
 
 def run_benchmark(
     model_names: list[str],
