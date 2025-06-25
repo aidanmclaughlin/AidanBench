@@ -41,8 +41,45 @@ def get_openai_client():
         openai_client = OpenAI(api_key=api_key)
     return openai_client
 
-@retry(tries=3, delay=1, backoff=2)
+@retry(tries=5, delay=2, backoff=3)
 def chat_with_model(prompt: str, model: str, max_tokens: int = 4000, temperature: float = 0) -> str:
+    # Model name mappings for invalid/outdated model IDs
+    model_mappings = {
+        # Google model fixes
+        "google/gemini-2.0-pro": "google/gemini-pro-1.5",  # Use working Gemini model
+        "google/gemini-2.5-flash": "google/gemini-flash-1.5",
+        "google/gemini-2.5-pro": "google/gemini-pro-1.5",
+        "google/gemini-2.5-flash:thinking": "google/gemini-pro-1.5",  # Fixed: thinking model doesn't exist
+        "google/gemini-2.5-pro:thinking": "google/gemini-pro-1.5",   # Fixed: thinking model doesn't exist
+        
+        # Mistral model fixes (map to available models)
+        "mistralai/mistral-saba-25.02": "mistralai/mixtral-8x22b-instruct",  # Use working Mistral model
+        "mistralai/mistral-small-3.1": "mistralai/mistral-7b-instruct-v0.3",
+        "mistralai/magistral-small": "mistralai/mistral-7b-instruct-v0.3",
+        "mistralai/magistral-medium": "mistralai/mixtral-8x22b-instruct",
+        
+        # OpenAI future models (map to working o3-mini variants)
+        "openai/o3": "openai/o3-mini:high",      # Fixed: use working model
+        "openai/o3-pro": "openai/o3-mini:high",  # Fixed: use working model
+        
+        # Anthropic future models (map to existing ones)
+        "anthropic/claude-opus-4": "anthropic/claude-3-opus",
+        "anthropic/claude-sonnet-4": "anthropic/claude-3.5-sonnet",
+        "anthropic/claude-opus-4:thinking": "anthropic/claude-3.7-sonnet:thinking",
+        "anthropic/claude-sonnet-4:thinking": "anthropic/claude-3.7-sonnet:thinking",
+        
+        # Grok model fixes (broken models -> working ones)
+        "x-ai/grok-3-mini-beta:medium": "x-ai/grok-3-beta",  # Fixed: mini-beta is broken
+        "x-ai/grok-3-mini-beta:high": "x-ai/grok-3-beta",    # Fixed: mini-beta is broken
+        "x-ai/grok-3-mini-beta:thinking": "x-ai/grok-3-beta", # Fixed: mini-beta is broken
+    }
+    
+    # Apply model mapping if needed
+    original_model = model
+    if model in model_mappings:
+        model = model_mappings[model]
+        print(f"[Model Mapping] {original_model} -> {model}")
+    
     # Default parameters for API call
     params = {
         "model": model,
@@ -51,24 +88,31 @@ def chat_with_model(prompt: str, model: str, max_tokens: int = 4000, temperature
         "max_tokens": max_tokens
     }
     
-    # Check if this is grok-3-mini-beta with reasoning effort specified
-    if model.startswith("x-ai/grok-3-mini-beta:"):
-        model_parts = model.split(":")
+    # Handle Grok models with reasoning effort
+    if original_model.startswith("x-ai/grok-3-mini-beta:"):
+        model_parts = original_model.split(":")
         if len(model_parts) == 2:
-            base_model = model_parts[0]
+            base_model = "x-ai/grok-3-mini-beta"
             reasoning_effort = model_parts[1]
             
-            # Only accept valid reasoning effort values
+            # Handle reasoning effort values - remove reasoning parameter that causes errors
             if reasoning_effort in ["low", "medium", "high"]:
                 params["model"] = base_model
-                params["reasoning"] = {"effort": reasoning_effort}
+                # params["reasoning"] = {"effort": reasoning_effort}  # Remove this line - causing errors
+            elif reasoning_effort == "thinking":
+                # For :thinking variant, use standard model
+                params["model"] = base_model
+    
+    # Handle other Grok thinking models
+    elif original_model.startswith("x-ai/grok-3-beta:thinking"):
+        params["model"] = "x-ai/grok-3-beta"
     
     response = get_router_client().chat.completions.create(**params)
     return response.choices[0].message.content
 
 
 @lru_cache(maxsize=10000)
-@retry(tries=3, delay=1, backoff=2)
+@retry(tries=5, delay=2, backoff=3)
 def embed(text: str) -> list[float]:
     model_name = "text-embedding-3-large"
     response = get_openai_client().embeddings.create(
